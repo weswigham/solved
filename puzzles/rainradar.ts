@@ -66,16 +66,18 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
         const columns = [...state.columns];
         const height = cloud.lr.y - cloud.ul.y + 1;
         for (let x = cloud.ul.x; x <= cloud.lr.x; x++) {
-            if (columns[x] === -1) continue;
+            if (columns[x] === -1) continue;  // Unconstrained
             columns[x] -= height;
-            if (columns[x] < 0) return false;
+            if (columns[x] === 1) return false; // There's no following move which can add just one square
+            if (columns[x] < 0) return false; // Overfull
         }
         const rows = [...state.rows];
         const width = cloud.lr.x - cloud.ul.x + 1;
         for (let y = cloud.ul.y; y <= cloud.lr.y; y++) {
-            if (rows[y] === -1) continue;
+            if (rows[y] === -1) continue; // Unconstrained
             rows[y] -= width;
-            if (rows[y] < 0) return false;
+            if (rows[y] === 1) return false; // There's no following move which can add just one square
+            if (rows[y] < 0) return false; // Overfull
         }
         if (this.cloudHasBoundaryViolations(cloud, state.clouds)) return false;
 
