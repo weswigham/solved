@@ -39,8 +39,14 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
         console.log(` ${state.columns.map(c => c === -1 ? " " : c).join(" ")} `);
     }
     *enumerateNext(state: RainRadarState) {
-        for (let x = 0; x < state.columns.length - 1; x++) {
-            for (let y = 0; y < state.rows.length - 1; y++) {
+        let minx = 0, miny = 0;
+        if (state.clouds.length) {
+            minx = state.clouds[state.clouds.length - 1].ul.x;
+            miny = state.clouds[state.clouds.length - 1].ul.y;
+        }
+        for (let x = minx; x < state.columns.length - 1; x++) {
+            for (let y = miny; y < state.rows.length - 1; y++) {
+                miny = 0;
                 for (let x2 = x + 1; x2 < state.columns.length; x2++) {
                     for (let y2 = y + 1; y2 < state.rows.length; y2++) {
                         const cloud: RainRadarCloud = {ul: {x, y}, lr: {x: x2, y: y2}};
@@ -76,20 +82,16 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
         return {columns, rows, clouds: [...state.clouds, cloud]};
     }
     private cloudHasBoundaryViolations(cloud: RainRadarCloud, clouds: RainRadarCloud[]) {
-        return !!clouds.find(c => this.pairInterferes(cloud, c));
+        const embiggened = this.embiggen(cloud);
+        return !!clouds.find(c => this.pairInterferes(embiggened, c));
     }
     private embiggen(c1: RainRadarCloud) {
         return {ul: {x: c1.ul.x - 1, y: c1.ul.y - 1}, lr: {x: c1.lr.x + 1, y: c1.lr.y + 1}};
     }
-    private pointLessThanOrEqual(p1: Point2D, p2: Point2D) {
-        return p1.x <= p2.x && p1.y <= p2.y;
-    }
     private pairInterferes(c1: RainRadarCloud, c2: RainRadarCloud) {
-        const biggerc1 = this.embiggen(c1);
-        const biggerc2 = this.embiggen(c2);
-        return biggerc2.ul.x <= biggerc1.lr.x || 
-           biggerc2.lr.x <= biggerc1.ul.x || 
-           biggerc2.ul.y >= biggerc1.lr.y ||
-           biggerc2.lr.y >= biggerc1.ul.y;
+        return c1.ul.x <= c2.lr.x &&
+          c2.ul.x <= c1.lr.x &&
+          c1.ul.y <= c2.lr.y &&
+          c2.ul.y <= c1.lr.y;
     }
 }

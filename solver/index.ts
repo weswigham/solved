@@ -2,7 +2,6 @@ export abstract class AbstractSolver<TState> {
     private statesExplored = 0;
     constructor(protected printStates: boolean = false) {}
     *solutions(initial: TState): IterableIterator<TState> {
-        debugger;
         this.statesExplored++;
         if (this.printStates && this.display) {
             console.log(`State number ${this.statesExplored}`);
