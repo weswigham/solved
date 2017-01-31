@@ -1,0 +1,34 @@
+{
+  "name": "solved",
+  "version": "1.0.0",
+  "description": "A puzzle solver in TypeScript",
+  "main": "index.ts",
+  "scripts": {
+    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register",
+    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weswigham/solved.git"
+  },
+  "keywords": [
+    "puzzle",
+    "solver",
+    "typescript"
+  ],
+  "author": "Wesley Wigham (weswigham)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/weswigham/solved/issues"
+  },
+  "homepage": "https://github.com/weswigham/solved#readme",
+  "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/mocha": "^2.2.38",
+    "@types/node": "^7.0.4",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "ts-node": "^2.0.0",
+    "typescript": "^2.1.5"
+  }
+}
