@@ -47,8 +47,8 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
         for (let x = minx; x < state.columns.length - 1; x++) {
             for (let y = miny; y < state.rows.length - 1; y++) {
                 miny = 0;
-                for (let x2 = x + 1; x2 < state.columns.length; x2++) {
-                    for (let y2 = y + 1; y2 < state.rows.length; y2++) {
+                for (let x2 = state.columns.length + 1; x2 >= x + 1; x2--) {
+                    for (let y2 = state.rows.length - 1; y2 >= y + 1; y2--) {
                         const cloud: RainRadarCloud = {ul: {x, y}, lr: {x: x2, y: y2}};
                         const newStateOrFalse = this.validCloudToAdd(cloud, state);
                         if (newStateOrFalse) {

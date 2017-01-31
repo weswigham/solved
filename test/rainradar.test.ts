@@ -24,11 +24,11 @@ describe("a rainradar solver", () => {
         const solutions = solver.solutions({columns: [5, -1, -1, 5, -1], rows: [-1, -1, -1, 4, -1], clouds: []});
         const resolved = [...solutions];
         expect(resolved.length).to.equal(2);
-        expect(resolved[0]).to.be.deep.equal({columns: [0, -1, -1, 0, -1], rows: [-1, -1, -1, 0, -1], clouds: [
+        expect(resolved[1]).to.be.deep.equal({columns: [0, -1, -1, 0, -1], rows: [-1, -1, -1, 0, -1], clouds: [
             {ul: {x: 0, y: 0}, lr: {x: 1, y: 4}},
             {ul: {x: 3, y: 0}, lr: {x: 4, y: 4}}
         ]});
-        expect(resolved[1]).to.be.deep.equal({columns: [0, -1, -1, 0, -1], rows: [-1, -1, -1, 0, -1], clouds: [{ul: {x: 0, y: 0}, lr: {x: 3, y: 4}}]});
+        expect(resolved[0]).to.be.deep.equal({columns: [0, -1, -1, 0, -1], rows: [-1, -1, -1, 0, -1], clouds: [{ul: {x: 0, y: 0}, lr: {x: 3, y: 4}}]});
     });
 
     it("should be able to soulve a multicloud rain radar puzzle", () => {
