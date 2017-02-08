@@ -1,19 +1,19 @@
 import {Point2D} from "../util";
 import {AbstractSolver} from "../solver";
 
-export interface RainRadarCloud {
+export interface Cloud {
     ul: Point2D;
     lr: Point2D;
 }
 
-export interface RainRadarState {
+export interface State {
     columns: number[];
     rows: number[];
-    clouds: RainRadarCloud[];
+    clouds: Cloud[];
 }
 
-export class RainRadarSolver extends AbstractSolver<RainRadarState> {
-    display(state: RainRadarState) {
+export class Solver extends AbstractSolver<State> {
+    display(state: State) {
         const horizontalSeperator = "-".repeat((state.columns.length*2)+1);
         console.log(horizontalSeperator);
         for (let y = 0; y < state.columns.length; y++) {
@@ -38,7 +38,7 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
         }
         console.log(` ${state.columns.map(c => c === -1 ? " " : c).join(" ")} `);
     }
-    *enumerateNext(state: RainRadarState) {
+    *enumerateNext(state: State) {
         let minx = 0, miny = 0;
         if (state.clouds.length) {
             minx = state.clouds[state.clouds.length - 1].ul.x;
@@ -49,7 +49,7 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
                 miny = 0;
                 for (let x2 = state.columns.length + 1; x2 >= x + 1; x2--) {
                     for (let y2 = state.rows.length - 1; y2 >= y + 1; y2--) {
-                        const cloud: RainRadarCloud = {ul: {x, y}, lr: {x: x2, y: y2}};
+                        const cloud: Cloud = {ul: {x, y}, lr: {x: x2, y: y2}};
                         const newStateOrFalse = this.validCloudToAdd(cloud, state);
                         if (newStateOrFalse) {
                             yield newStateOrFalse;
@@ -59,10 +59,10 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
             }
         }
     }
-    isSolution(state: RainRadarState) {
+    isSolution(state: State) {
         return state.columns.every(x => ((x === -1) || (x === 0))) && state.rows.every(x => ((x === -1) || (x === 0)));
     }
-    private validCloudToAdd(cloud: RainRadarCloud, state: RainRadarState): false | RainRadarState {
+    private validCloudToAdd(cloud: Cloud, state: State): false | State {
         const columns = [...state.columns];
         const height = cloud.lr.y - cloud.ul.y + 1;
         for (let x = cloud.ul.x; x <= cloud.lr.x; x++) {
@@ -83,14 +83,14 @@ export class RainRadarSolver extends AbstractSolver<RainRadarState> {
 
         return {columns, rows, clouds: [...state.clouds, cloud]};
     }
-    private cloudHasBoundaryViolations(cloud: RainRadarCloud, clouds: RainRadarCloud[]) {
+    private cloudHasBoundaryViolations(cloud: Cloud, clouds: Cloud[]) {
         const embiggened = this.embiggen(cloud);
         return !!clouds.find(c => this.pairInterferes(embiggened, c));
     }
-    private embiggen(c1: RainRadarCloud) {
+    private embiggen(c1: Cloud) {
         return {ul: {x: c1.ul.x - 1, y: c1.ul.y - 1}, lr: {x: c1.lr.x + 1, y: c1.lr.y + 1}};
     }
-    private pairInterferes(c1: RainRadarCloud, c2: RainRadarCloud) {
+    private pairInterferes(c1: Cloud, c2: Cloud) {
         return c1.ul.x <= c2.lr.x &&
           c2.ul.x <= c1.lr.x &&
           c1.ul.y <= c2.lr.y &&

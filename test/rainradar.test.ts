@@ -1,10 +1,10 @@
 /// <reference types="mocha" />
 import {expect} from "chai";
-import {RainRadarSolver, RainRadarState} from "../";
+import {RainRadar} from "../";
 
 describe("a rainradar solver", () => {
     it("should be able to solve a simple rainradar puzzle", () => {
-        const solver = new RainRadarSolver();
+        const solver = new RainRadar.Solver();
         const solutions = solver.solutions({columns: [3, -1, -1], rows: [3, -1, -1], clouds: []});
         const resolved = [...solutions];
         expect(resolved.length).to.equal(1);
@@ -12,7 +12,7 @@ describe("a rainradar solver", () => {
     });
 
     it("should be able to solve a more complicated rainradar puzzle", () => {
-        const solver = new RainRadarSolver();
+        const solver = new RainRadar.Solver();
         const solutions = solver.solutions({columns: [5, -1, 5, 5, -1], rows: [-1, -1, -1, 4, -1], clouds: []});
         const resolved = [...solutions];
         expect(resolved.length).to.equal(1);
@@ -20,7 +20,7 @@ describe("a rainradar solver", () => {
     });
 
     it("should be able to verify when there are multiple meaningfully different solutions", () => {
-        const solver = new RainRadarSolver();
+        const solver = new RainRadar.Solver();
         const solutions = solver.solutions({columns: [5, -1, -1, 5, -1], rows: [-1, -1, -1, 4, -1], clouds: []});
         const resolved = [...solutions];
         expect(resolved.length).to.equal(2);
@@ -32,7 +32,7 @@ describe("a rainradar solver", () => {
     });
 
     it("should be able to soulve a multicloud rain radar puzzle", () => {
-        const solver = new RainRadarSolver();
+        const solver = new RainRadar.Solver();
         const solutions = solver.solutions({columns: [-1, 4, -1, 3, -1], rows: [-1, 4, 2, 4, -1], clouds: []});
         const resolved = [...solutions];
         expect(resolved.length).to.equal(1);

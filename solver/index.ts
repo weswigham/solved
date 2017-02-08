@@ -19,3 +19,27 @@ export abstract class AbstractSolver<TState> {
     abstract isSolution(state: TState): boolean;
     abstract display?(state: TState): void;
 }
+
+export interface Strategy<T> {
+    (input: T): IterableIterator<T>;
+}
+
+export abstract class StrategicAbstractSolver<TState> extends AbstractSolver<TState> {
+    private strategies: Strategy<TState>[] = [];
+    constructor(...strats: Strategy<TState>[]) {
+        super();
+
+        this.strategies = strats;
+    }
+    *enumerateNext(state: TState): IterableIterator<TState> {
+        for (const strat of this.strategies) {
+            const gen = strat(state);
+            const result = gen.next();
+            if (result && result.value) {
+                yield result.value;
+                yield* gen;
+                break;
+            }
+        }
+    }
+}
