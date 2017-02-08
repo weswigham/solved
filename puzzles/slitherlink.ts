@@ -74,7 +74,7 @@ const dot = "·";
 
 export class Solver extends StrategicAbstractSolver<State> {
     constructor() {
-        super(BestGuess);
+        super(ConstrainZero, BestGuess);
     }
     isSolution(state: State): boolean {
         // All number constraints must be satisfied
@@ -278,6 +278,54 @@ export class Solver extends StrategicAbstractSolver<State> {
     }
 }
 
-export const BestGuess: Strategy<State> = function*(state): IterableIterator<State> {
+function cloneState(state: State): State {
+    return {
+        grid: state.grid.map(c => [...c]),
+        edges: {
+            row: state.edges.row.map(r => [...r]),
+            column: state.edges.column.map(c => [...c])
+        }
+    };
+}
+
+/**
+ * Marks all the edges around a zero as not a wall.
+ */
+export const ConstrainZero: Strategy<State> = function*(state): IterableIterator<State | undefined> {
+    let changed: State | undefined = undefined;
+    for (let x = 0; x < state.grid.length; x++) {
+        for (let y = 0; y< state.grid[x].length; y++) {
+            if (state.grid[x][y] !== 0) continue;
+            for (const dir of ["north", "south", "east", "west"]) {
+                const edge = lookupEdge(state, dir as Cardinal, x, y);
+                const kind = getEdge(changed || state, ...edge);
+                if (kind !== "notwall") {
+                    changed = changed || cloneState(state);
+                    setEdge("notwall", changed, ...edge);
+                }
+            }
+        }
+    }
+    return changed;
+}
+
+/**
+ * Enumerates all available spaces to place an edge - last resort!
+ */
+export const BestGuess: Strategy<State> = function*(state): IterableIterator<State | undefined> {
+    // Okay, so everything intelligent has failed to deduce any more intelligent moves
+    // Time to enumerate possible placements
+    // First, prefer open spaces adjacent to edges
+    for (const kind of ["row", "column"]) {
+        const type = kind as RowColumn;
+        for (let x = 0; x < state.grid.length + (kind === "column" ? 1 : 0); x++) {
+            for (let y = 0; y < state.grid[0].length + (kind === "row" ? 1 : 0); y++) {
+                if (state.edges[type][x][y] !== "wall") continue;
+                
+            }
+        }
+    }
+    // Then, prefer open spaces adjacent to numbers
+    // Lastly, use any open space
     return state;
 };
