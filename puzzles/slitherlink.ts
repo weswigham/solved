@@ -1,4 +1,4 @@
-import {Strategy, StrategicAbstractSolver} from "../solver";
+import {Strategy, StrategicAbstractSolver, strategy, StrategicState} from "../solver";
 import {Cardinal, Enum} from "../util";
 
 export type EdgeState = "wall" | "notwall";
@@ -7,7 +7,7 @@ export const EdgeState = Enum("wall", "notwall");
 export type RowColumn = "row" | "column";
 export const RowColumn = Enum("row", "column");
 
-export interface State {
+export interface State extends StrategicState {
     grid: (number | undefined)[][];
     edges: {[x in RowColumn]: (EdgeState | undefined)[][]};
 }
@@ -73,8 +73,22 @@ function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: num
 const dot = "·";
 
 export class Solver extends StrategicAbstractSolver<State> {
-    constructor() {
-        super(ConstrainZero, BestGuess);
+    constructor(...strategies: Strategy<State>[]) {
+        if (strategies.length === 0) {
+            super(
+                ConstrainZero,
+                ConstrainThree,
+                ConstrainOne,
+                ConstrainTwo,
+                FollowedEdges,
+                AdjacentEdges,
+                GuessContinuous,
+                GuessConstrained,
+            );
+        }
+        else {
+            super(...strategies);
+        }
     }
     isSolution(state: State): boolean {
         // All number constraints must be satisfied
@@ -275,6 +289,7 @@ export class Solver extends StrategicAbstractSolver<State> {
         }
         const bottom = state.edges.row.map(column => column[state.grid[0].length]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot);
         console.log(bottom);
+        if (state.lastStrategyApplied) console.log(`Used strategy ${state.lastStrategyApplied}.`);
     }
 }
 
@@ -291,7 +306,8 @@ function cloneState(state: State): State {
 /**
  * Marks all the edges around a zero as not a wall.
  */
-export const ConstrainZero: Strategy<State> = function*(state): IterableIterator<State | undefined> {
+export const ConstrainZero: Strategy<State> = strategy(function* ConstrainZeros(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
     let changed: State | undefined = undefined;
     for (let x = 0; x < state.grid.length; x++) {
         for (let y = 0; y< state.grid[x].length; y++) {
@@ -307,15 +323,56 @@ export const ConstrainZero: Strategy<State> = function*(state): IterableIterator
         }
     }
     return changed;
-}
+});
 
 /**
- * Enumerates all available spaces to place an edge - last resort!
+ * Find all threes with:
+ *  - Three adjacent walls - last side is not a wall
+ *  - One adjacent not a wall - all three other sides are walls
  */
-export const BestGuess: Strategy<State> = function*(state): IterableIterator<State | undefined> {
-    // Okay, so everything intelligent has failed to deduce any more intelligent moves
-    // Time to enumerate possible placements
-    // First, prefer open spaces adjacent to edges
+export const ConstrainThree: Strategy<State> = strategy(function* ConstrainThree(state: State) {
+
+});
+
+/**
+ * Find all ones with:
+ *  - Three adjacent not a walls - last side is a wall
+ *  - One adjacent wall - other three sides are not a wall 
+ */
+export const ConstrainOne: Strategy<State> = strategy(function* ConstrainOne(state: State) {
+
+});
+
+/**
+ * Find all twos with:
+ *  - Two adjacent sides as walls - other two are marked not a wall
+ *  - Two adjacent sides as not walls - other two are marked as walls
+ */
+export const ConstrainTwo: Strategy<State> = strategy(function* ConstrainTwo(state: State) {
+
+});
+
+/**
+ * For all existing edges:
+ *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
+ */
+export const FollowedEdges: Strategy<State> = strategy(function* FollowedEdges(state: State) {
+
+});
+
+/**
+ * For all existing edges:
+ *  - If there is already a connecting edge in a direction, mark both other options as not a wall
+ */
+export const AdjacentEdges: Strategy<State> = strategy(function* AdjacentEdges(state: State) {
+
+});
+
+/**
+ * Enumerate all unconnected edges and all viable paths out of those edges
+ */
+export const GuessContinuous: Strategy<State> = strategy(function* GuessContinuous(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
     for (const kind of ["row", "column"]) {
         const type = kind as RowColumn;
         for (let x = 0; x < state.grid.length + (kind === "column" ? 1 : 0); x++) {
@@ -325,7 +382,11 @@ export const BestGuess: Strategy<State> = function*(state): IterableIterator<Sta
             }
         }
     }
-    // Then, prefer open spaces adjacent to numbers
-    // Lastly, use any open space
-    return state;
-};
+});
+
+/**
+ * Enumerate all partially or unconstrained numbers and the adjacent possible edges (skip edges connected to other edged - GuessContinuous should hit them)
+ */
+export const GuessConstrained: Strategy<State> = strategy(function* GuessConstrained(state: State) {
+
+});

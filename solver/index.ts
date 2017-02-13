@@ -21,7 +21,23 @@ export abstract class AbstractSolver<TState> {
 }
 
 export interface Strategy<T> {
-    (input: T): IterableIterator<T>;
+    (input: T): IterableIterator<T | undefined>;
+}
+
+
+export interface StrategicState {
+    lastStrategyApplied?: string;
+}
+
+export function strategy<T extends StrategicState>(gen: (a: T) => IterableIterator<T | undefined>): (a: T) => IterableIterator<T | undefined> {
+    return function*(state) {
+        for (const next of gen(state)) {
+            if (next) {
+                next.lastStrategyApplied = gen.name;
+            }
+            yield next;
+        }
+    }
 }
 
 export abstract class StrategicAbstractSolver<TState> extends AbstractSolver<TState> {
