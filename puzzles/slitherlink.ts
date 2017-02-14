@@ -80,10 +80,13 @@ export class Solver extends StrategicAbstractSolver<State> {
                 ConstrainThree,
                 ConstrainOne,
                 ConstrainTwo,
+                AdjacentThrees,
+                OnesByNonWalls,
                 FollowedEdges,
                 AdjacentEdges,
                 GuessContinuous,
                 GuessConstrained,
+                GuessBlank,
             );
         }
         else {
@@ -331,7 +334,22 @@ export const ConstrainZero: Strategy<State> = strategy(function* ConstrainZeros(
  *  - One adjacent not a wall - all three other sides are walls
  */
 export const ConstrainThree: Strategy<State> = strategy(function* ConstrainThree(state: State) {
-
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    let changed: State | undefined = undefined;
+    for (let x = 0; x < state.grid.length; x++) {
+        for (let y = 0; y< state.grid[x].length; y++) {
+            if (state.grid[x][y] !== 3) continue;
+            for (const dir of ["north", "south", "east", "west"]) {
+                const edge = lookupEdge(state, dir as Cardinal, x, y);
+                const kind = getEdge(changed || state, ...edge);
+                if (kind !== "notwall") {
+                    changed = changed || cloneState(state);
+                    setEdge("notwall", changed, ...edge);
+                }
+            }
+        }
+    }
+    return changed;
 });
 
 /**
@@ -340,6 +358,7 @@ export const ConstrainThree: Strategy<State> = strategy(function* ConstrainThree
  *  - One adjacent wall - other three sides are not a wall 
  */
 export const ConstrainOne: Strategy<State> = strategy(function* ConstrainOne(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
 });
 
@@ -349,14 +368,46 @@ export const ConstrainOne: Strategy<State> = strategy(function* ConstrainOne(sta
  *  - Two adjacent sides as not walls - other two are marked as walls
  */
 export const ConstrainTwo: Strategy<State> = strategy(function* ConstrainTwo(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
+});
+
+/**
+ * All adjacent threes must have a wall on their common edge
+ * Threes arranged like so:
+ *   3 3
+ *     3
+ * 
+ *   3 3
+ *   3 3
+ * Imply there is no valid solution to the puzzle.
+ */
+export const AdjacentThrees: Strategy<State> = strategy(function* AdjacentThrees(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+});
+
+/**
+ * Given this pattern:
+ *    x
+ *  x . .
+ *     1
+ * This must follow:
+ *    x
+ *  x .x.
+ *    x1
+ * This can be applied to all corners of a 1.
+ */
+export const OnesByNonWalls: Strategy<State> = strategy(function* OnesByNonWalls(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 });
 
 /**
  * For all existing edges:
  *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
+ *  - If a point has three not-a-wall going into it, the last edge going into the point must not be a wall
  */
 export const FollowedEdges: Strategy<State> = strategy(function* FollowedEdges(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
 });
 
@@ -365,6 +416,7 @@ export const FollowedEdges: Strategy<State> = strategy(function* FollowedEdges(s
  *  - If there is already a connecting edge in a direction, mark both other options as not a wall
  */
 export const AdjacentEdges: Strategy<State> = strategy(function* AdjacentEdges(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
 });
 
@@ -388,5 +440,14 @@ export const GuessContinuous: Strategy<State> = strategy(function* GuessContinuo
  * Enumerate all partially or unconstrained numbers and the adjacent possible edges (skip edges connected to other edged - GuessContinuous should hit them)
  */
 export const GuessConstrained: Strategy<State> = strategy(function* GuessConstrained(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+
+});
+
+/**
+ * Enumerate all unconstrained edges - Should only ever be hit on a board with only zeroes as constraints.
+ */
+export const GuessBlank: Strategy<State> = strategy(function* GuessBlank(state: State) {
+    if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
 });
