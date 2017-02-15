@@ -402,7 +402,7 @@ export namespace Strategies {
     });
 
     /**
-     * All adjacent threes must have a wall on their common edge
+     * All adjacent threes must have a wall on their common edge, _and_ on the edges opposite those edges
      * Threes arranged like so:
      *   3 3
      *     3
@@ -413,6 +413,29 @@ export namespace Strategies {
      */
     export const AdjacentThrees = register(function* AdjacentThrees(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        let changed: State | undefined = undefined;
+        for (let x = 0; x < state.grid.length; x++) {
+            for (let y = 0; y < state.grid[x].length; y++) {
+                if (state.grid[x][y] !== 3) continue;
+                // Horizontal
+                if (state.grid[x + 1][y] === 3) {
+                    [
+                        lookupEdge(changed || state, Cardinal.west, x, y),
+                        lookupEdge(changed || state, Cardinal.west, x + 1, y),            
+                        lookupEdge(changed || state, Cardinal.east, x + 1, y),
+                    ].forEach(e => setEdge("wall", changed || state, ...e));
+                }
+                // Vertical
+                if (state.grid[x][y + 1] === 3) {
+                    [
+                        lookupEdge(changed || state, Cardinal.north, x, y),
+                        lookupEdge(changed || state, Cardinal.north, x, y + 1),            
+                        lookupEdge(changed || state, Cardinal.south, x, y + 1),
+                    ].forEach(e => setEdge("wall", changed || state, ...e));
+                }
+            }
+        }
+        return changed;
     });
 
     /**
