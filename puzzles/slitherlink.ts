@@ -318,13 +318,22 @@ export namespace Strategies {
         return strat;
     }
 
+
+    type ActionGetEdge = {
+        (rowCol: RowColumn, x: number, y: number): EdgeState;
+        (...tuple: (RowColumn | number)[]): EdgeState;
+    }
+    type ActionSetEdge = {
+        (es: EdgeState, rowCol: RowColumn, x: number, y: number): EdgeState;
+        (es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState;
+    }
     type ForEachGridSquareAction = (
         x: number,
         y: number,
         getGridElement: (x: number, y: number) => (number | undefined),
         lookupEdge: (dir: Cardinal, x: number, y: number) => [RowColumn, number, number],
-        getEdge: (...tuple: (RowColumn | number)[]) => EdgeState,
-        setEdge: (es: EdgeState, ...tuple: (RowColumn | number)[]) => EdgeState,
+        getEdge: ActionGetEdge,
+        setEdge: ActionSetEdge,
     ) => any
     function forEachGridSquare(state: State, action: ForEachGridSquareAction) {
         let changed: State | undefined = undefined;
@@ -471,6 +480,32 @@ export namespace Strategies {
      */
     export const OnesByNonWalls = register(function* OnesByNonWalls(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 1) return;
+            // Upper left corner
+            if (getEdge(...lookupEdge(Cardinal.south, x - 1, y - 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.east, x - 1, y - 1)) === "notwall") {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            }
+
+            // Upper right corner
+            if (getEdge(...lookupEdge(Cardinal.south, x + 1, y + 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.west, x + 1, y + 1)) === "notwall") {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            }
+
+            // Lower left corner
+            if (getEdge(...lookupEdge(Cardinal.north, x - 1, y + 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.east, x - 1, y + 1)) === "notwall") {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            }
+
+            // Lower right corner
+            if (getEdge(...lookupEdge(Cardinal.north, x + 1, y - 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.east, x + 1, y - 1)) === "notwall") {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            }
+        });
     });
 
     /**
