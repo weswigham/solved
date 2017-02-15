@@ -12,6 +12,8 @@ export interface State extends StrategicState {
     edges: {[x in RowColumn]: (EdgeState | undefined)[][]};
 }
 
+const directions = Object.keys(Cardinal);
+
 /*
 As far as edges are concerned, array lengths should be based on grid lengths:
     - rows: outer (x) length = grid.length;
@@ -365,8 +367,14 @@ export namespace Strategies {
             const val = setEdge(es, changed || state, ...tuple);
 
             // Validate numeric constraints adjacent to the placed edge (save loop checking for elsewhere)
-            for (const [x, y] of affectingGridSquares(changed, ...tuple)) {
-                
+            for (const [x, y] of affectingGridSquares(changed || state, ...tuple)) {
+                const num = getGridElement(x, y);
+                if (num === undefined) continue;
+                let found = directions.map(d => getEdgeInternal(...lookupEdgeInternal(d as Cardinal, x, y))).filter(k => k === "wall").length;
+                if (found > num) {
+                    violation = true;
+                    break;
+                }
             }
 
             return val;
@@ -379,7 +387,7 @@ export namespace Strategies {
     function constrain(n: number, state: State) {
         return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 3) return;
-            const edges = ["north", "south", "east", "west"].map(dir => lookupEdge(dir as Cardinal, x, y));
+            const edges = directions.map(dir => lookupEdge(dir as Cardinal, x, y));
             if (edges.filter(e => getEdge(...e) === "notwall").length === (4 - n)) {
                 edges.forEach(e => {
                     if (getEdge(...e) !== "notwall") {
@@ -404,7 +412,7 @@ export namespace Strategies {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
         return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 0) return;
-            for (const dir of ["north", "south", "east", "west"]) {
+            for (const dir of directions) {
                 const edge = lookupEdge(dir as Cardinal, x, y);
                 const kind = getEdge(...edge);
                 if (kind !== "notwall") {
