@@ -61,12 +61,18 @@ function lookupEdge(state: State, direction: Cardinal, x: number, y: number): [R
 function getEdge(state: State, kind: RowColumn, x: number, y: number): EdgeState;
 function getEdge(state: State, ...tuple: (RowColumn | number)[]): EdgeState;
 function getEdge(state: State, kind: RowColumn, x: number, y: number): EdgeState {
+    if (x < 0 || y < 0 || x >= state.edges[kind].length || y >= state.edges[kind][x].length) return "notwall";
     return state.edges[kind][x][y];
 }
 
 function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: number): EdgeState;
 function setEdge(es: EdgeState, state: State, ...tuple: (RowColumn | number)[]): EdgeState;
 function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: number): EdgeState {
+    if (x < 0 || y < 0 || x >= state.edges[kind].length || y >= state.edges[kind][x].length) {
+        if (es !== "notwall") throw new Error("Attempted to set edge outside map to a wall");
+        return "notwall";
+    }
+    if (state.edges[kind][x][y] && state.edges[kind][x][y] !== es) throw new Error("Attempted to overwrite already set edge with differing value");
     return state.edges[kind][x][y] = es;
 }
 
@@ -75,19 +81,7 @@ const dot = "·";
 export class Solver extends StrategicAbstractSolver<State> {
     constructor(...strategies: Strategy<State>[]) {
         if (strategies.length === 0) {
-            super(
-                ConstrainZero,
-                ConstrainThree,
-                ConstrainOne,
-                ConstrainTwo,
-                AdjacentThrees,
-                OnesByNonWalls,
-                FollowedEdges,
-                AdjacentEdges,
-                GuessContinuous,
-                GuessConstrained,
-                GuessBlank,
-            );
+            super(...Strategies.all());
         }
         else {
             super(...strategies);
@@ -306,148 +300,184 @@ function cloneState(state: State): State {
     };
 }
 
-/**
- * Marks all the edges around a zero as not a wall.
- */
-export const ConstrainZero: Strategy<State> = strategy(function* ConstrainZeros(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
-    let changed: State | undefined = undefined;
-    for (let x = 0; x < state.grid.length; x++) {
-        for (let y = 0; y< state.grid[x].length; y++) {
-            if (state.grid[x][y] !== 0) continue;
-            for (const dir of ["north", "south", "east", "west"]) {
-                const edge = lookupEdge(state, dir as Cardinal, x, y);
-                const kind = getEdge(changed || state, ...edge);
-                if (kind !== "notwall") {
-                    changed = changed || cloneState(state);
-                    setEdge("notwall", changed, ...edge);
+
+export namespace Strategies {
+    const _all: Strategy<State>[] = [];
+    /**
+     * Returns an array of all registered strategies in registration order
+     */
+    export function all(): Strategy<State>[] {
+        return _all;
+    }
+
+    /**
+     * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
+     */
+    export function register(strat: Strategy<State>): Strategy<State> {
+        _all.push(strategy(strat));
+        return strat;
+    }
+
+    /**
+     * Contrain 1,2,3 are all very similar - this shows how they are all similarly constraining
+     */
+    function constrain(n: number, state: State) {
+        let changed: State | undefined = undefined;
+        for (let x = 0; x < state.grid.length; x++) {
+            for (let y = 0; y< state.grid[x].length; y++) {
+                if (state.grid[x][y] !== 3) continue;
+                const edges = ["north", "south", "east", "west"].map(dir => lookupEdge(state, dir as Cardinal, x, y));
+                if (edges.filter(e => getEdge(changed || state, ...e) === "notwall").length === (4 - n)) {
+                    edges.forEach(e => {
+                        if (getEdge(changed || state, ...e) !== "notwall") {
+                            changed = changed || cloneState(state);
+                            setEdge("wall", changed, ...e);
+                        }
+                    });
+                }
+                else if (edges.filter(e => getEdge(changed || state, ...e) === "wall").length === n) {
+                    edges.forEach(e => {
+                        if (getEdge(changed || state, ...e) !== "wall") {
+                            changed = changed || cloneState(state);
+                            setEdge("notwall", changed, ...e);
+                        }
+                    });
                 }
             }
         }
+        return changed;
     }
-    return changed;
-});
 
-/**
- * Find all threes with:
- *  - Three adjacent walls - last side is not a wall
- *  - One adjacent not a wall - all three other sides are walls
- */
-export const ConstrainThree: Strategy<State> = strategy(function* ConstrainThree(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
-    let changed: State | undefined = undefined;
-    for (let x = 0; x < state.grid.length; x++) {
-        for (let y = 0; y< state.grid[x].length; y++) {
-            if (state.grid[x][y] !== 3) continue;
-            for (const dir of ["north", "south", "east", "west"]) {
-                const edge = lookupEdge(state, dir as Cardinal, x, y);
-                const kind = getEdge(changed || state, ...edge);
-                if (kind !== "notwall") {
-                    changed = changed || cloneState(state);
-                    setEdge("notwall", changed, ...edge);
+    /**
+     * Marks all the edges around a zero as not a wall.
+     */
+    export const ConstrainZero = register(function* ConstrainZeros(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        let changed: State | undefined = undefined;
+        for (let x = 0; x < state.grid.length; x++) {
+            for (let y = 0; y< state.grid[x].length; y++) {
+                if (state.grid[x][y] !== 0) continue;
+                for (const dir of ["north", "south", "east", "west"]) {
+                    const edge = lookupEdge(state, dir as Cardinal, x, y);
+                    const kind = getEdge(changed || state, ...edge);
+                    if (kind !== "notwall") {
+                        changed = changed || cloneState(state);
+                        setEdge("notwall", changed, ...edge);
+                    }
                 }
             }
         }
-    }
-    return changed;
-});
+        return changed;
+    });
 
-/**
- * Find all ones with:
- *  - Three adjacent not a walls - last side is a wall
- *  - One adjacent wall - other three sides are not a wall 
- */
-export const ConstrainOne: Strategy<State> = strategy(function* ConstrainOne(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    /**
+     * Find all threes with:
+     *  - Three adjacent walls - last side is not a wall
+     *  - One adjacent not a wall - all three other sides are walls
+     */
+    export const ConstrainThree = register(function* ConstrainThree(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        return constrain(3, state);
+    });
 
-});
+    /**
+     * Find all ones with:
+     *  - Three adjacent not a walls - last side is a wall
+     *  - One adjacent wall - other three sides are not a wall 
+     */
+    export const ConstrainOne = register(function* ConstrainOne(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        return constrain(1, state);
+    });
 
-/**
- * Find all twos with:
- *  - Two adjacent sides as walls - other two are marked not a wall
- *  - Two adjacent sides as not walls - other two are marked as walls
- */
-export const ConstrainTwo: Strategy<State> = strategy(function* ConstrainTwo(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    /**
+     * Find all twos with:
+     *  - Two adjacent sides as walls - other two are marked not a wall
+     *  - Two adjacent sides as not walls - other two are marked as walls
+     */
+    export const ConstrainTwo = register(function* ConstrainTwo(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        let changed: State | undefined = undefined;
+        return constrain(2, state);
+    });
 
-});
+    /**
+     * All adjacent threes must have a wall on their common edge
+     * Threes arranged like so:
+     *   3 3
+     *     3
+     * 
+     *   3 3
+     *   3 3
+     * Imply there is no valid solution to the puzzle.
+     */
+    export const AdjacentThrees = register(function* AdjacentThrees(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    });
 
-/**
- * All adjacent threes must have a wall on their common edge
- * Threes arranged like so:
- *   3 3
- *     3
- * 
- *   3 3
- *   3 3
- * Imply there is no valid solution to the puzzle.
- */
-export const AdjacentThrees: Strategy<State> = strategy(function* AdjacentThrees(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
-});
+    /**
+     * Given this pattern:
+     *    x
+     *  x . .
+     *     1
+     * This must follow:
+     *    x
+     *  x .x.
+     *    x1
+     * This can be applied to all corners of a 1.
+     */
+    export const OnesByNonWalls = register(function* OnesByNonWalls(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    });
 
-/**
- * Given this pattern:
- *    x
- *  x . .
- *     1
- * This must follow:
- *    x
- *  x .x.
- *    x1
- * This can be applied to all corners of a 1.
- */
-export const OnesByNonWalls: Strategy<State> = strategy(function* OnesByNonWalls(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
-});
+    /**
+     * For all existing edges:
+     *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
+     *  - If a point has three not-a-wall going into it, the last edge going into the point must not be a wall
+     */
+    export const FollowedEdges = register(function* FollowedEdges(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
-/**
- * For all existing edges:
- *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
- *  - If a point has three not-a-wall going into it, the last edge going into the point must not be a wall
- */
-export const FollowedEdges: Strategy<State> = strategy(function* FollowedEdges(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    });
 
-});
+    /**
+     * For all existing edges:
+     *  - If there is already a connecting edge in a direction, mark both other options as not a wall
+     */
+    export const AdjacentEdges = register(function* AdjacentEdges(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
-/**
- * For all existing edges:
- *  - If there is already a connecting edge in a direction, mark both other options as not a wall
- */
-export const AdjacentEdges: Strategy<State> = strategy(function* AdjacentEdges(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    });
 
-});
-
-/**
- * Enumerate all unconnected edges and all viable paths out of those edges
- */
-export const GuessContinuous: Strategy<State> = strategy(function* GuessContinuous(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
-    for (const kind of ["row", "column"]) {
-        const type = kind as RowColumn;
-        for (let x = 0; x < state.grid.length + (kind === "column" ? 1 : 0); x++) {
-            for (let y = 0; y < state.grid[0].length + (kind === "row" ? 1 : 0); y++) {
-                if (state.edges[type][x][y] !== "wall") continue;
-                
+    /**
+     * Enumerate all unconnected edges and all viable paths out of those edges
+     */
+    export const GuessContinuous = register(function* GuessContinuous(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
+        for (const kind of ["row", "column"]) {
+            const type = kind as RowColumn;
+            for (let x = 0; x < state.grid.length + (kind === "column" ? 1 : 0); x++) {
+                for (let y = 0; y < state.grid[0].length + (kind === "row" ? 1 : 0); y++) {
+                    if (state.edges[type][x][y] !== "wall") continue;
+                    
+                }
             }
         }
-    }
-});
+    });
 
-/**
- * Enumerate all partially or unconstrained numbers and the adjacent possible edges (skip edges connected to other edged - GuessContinuous should hit them)
- */
-export const GuessConstrained: Strategy<State> = strategy(function* GuessConstrained(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    /**
+     * Enumerate all partially or unconstrained numbers and the adjacent possible edges (skip edges connected to other edged - GuessContinuous should hit them)
+     */
+    export const GuessConstrained = register(function* GuessConstrained(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
-});
+    });
 
-/**
- * Enumerate all unconstrained edges - Should only ever be hit on a board with only zeroes as constraints.
- */
-export const GuessBlank: Strategy<State> = strategy(function* GuessBlank(state: State) {
-    if (!!false) yield state; // Somehow this is needed to fix TS type inference
+    /**
+     * Enumerate all unconstrained edges - Should only ever be hit on a board with only zeroes as constraints.
+     */
+    export const GuessBlank = register(function* GuessBlank(state: State) {
+        if (!!false) yield state; // Somehow this is needed to fix TS type inference
 
-});
+    });
+}
