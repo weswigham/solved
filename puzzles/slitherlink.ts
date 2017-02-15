@@ -318,34 +318,63 @@ export namespace Strategies {
         return strat;
     }
 
+    type ForEachGridSquareAction = (
+        x: number,
+        y: number,
+        getGridElement: (x: number, y: number) => (number | undefined),
+        lookupEdge: (dir: Cardinal, x: number, y: number) => [RowColumn, number, number],
+        getEdge: (...tuple: (RowColumn | number)[]) => EdgeState,
+        setEdge: (es: EdgeState, ...tuple: (RowColumn | number)[]) => EdgeState,
+    ) => any
+    function forEachGridSquare(state: State, action: ForEachGridSquareAction) {
+        let changed: State | undefined = undefined;
+        for (let x = 0; x < state.grid.length; x++) {
+            for (let y = 0; y< state.grid[x].length; y++) {
+                action(x, y, getGridElement, lookupEdgeInternal, getEdgeInternal, setEdgeInternal);
+            }
+        }
+        return changed;
+
+        function getGridElement(x: number, y: number) {
+            return (changed || state).grid[x][y];
+        }
+
+        function lookupEdgeInternal(dir: Cardinal, x: number, y: number) {
+            return lookupEdge(changed || state, dir, x, y);
+        }
+
+        function getEdgeInternal(...tuple: (RowColumn | number)[]): EdgeState {
+            return getEdge(changed || state, ...tuple);
+        }
+
+        function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
+            if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
+            return setEdge(es, changed || state, ...tuple);
+        }
+    }
+
     /**
      * Contrain 1,2,3 are all very similar - this shows how they are all similarly constraining
      */
     function constrain(n: number, state: State) {
-        let changed: State | undefined = undefined;
-        for (let x = 0; x < state.grid.length; x++) {
-            for (let y = 0; y< state.grid[x].length; y++) {
-                if (state.grid[x][y] !== 3) continue;
-                const edges = ["north", "south", "east", "west"].map(dir => lookupEdge(state, dir as Cardinal, x, y));
-                if (edges.filter(e => getEdge(changed || state, ...e) === "notwall").length === (4 - n)) {
-                    edges.forEach(e => {
-                        if (getEdge(changed || state, ...e) !== "notwall") {
-                            changed = changed || cloneState(state);
-                            setEdge("wall", changed, ...e);
-                        }
-                    });
-                }
-                else if (edges.filter(e => getEdge(changed || state, ...e) === "wall").length === n) {
-                    edges.forEach(e => {
-                        if (getEdge(changed || state, ...e) !== "wall") {
-                            changed = changed || cloneState(state);
-                            setEdge("notwall", changed, ...e);
-                        }
-                    });
-                }
+        return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 3) return;
+            const edges = ["north", "south", "east", "west"].map(dir => lookupEdge(dir as Cardinal, x, y));
+            if (edges.filter(e => getEdge(...e) === "notwall").length === (4 - n)) {
+                edges.forEach(e => {
+                    if (getEdge(...e) !== "notwall") {
+                        setEdge("wall", ...e);
+                    }
+                });
             }
-        }
-        return changed;
+            else if (edges.filter(e => getEdge(...e) === "wall").length === n) {
+                edges.forEach(e => {
+                    if (getEdge(...e) !== "wall") {
+                        setEdge("notwall", ...e);
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -353,21 +382,16 @@ export namespace Strategies {
      */
     export const ConstrainZero = register(function* ConstrainZeros(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-        let changed: State | undefined = undefined;
-        for (let x = 0; x < state.grid.length; x++) {
-            for (let y = 0; y< state.grid[x].length; y++) {
-                if (state.grid[x][y] !== 0) continue;
-                for (const dir of ["north", "south", "east", "west"]) {
-                    const edge = lookupEdge(state, dir as Cardinal, x, y);
-                    const kind = getEdge(changed || state, ...edge);
-                    if (kind !== "notwall") {
-                        changed = changed || cloneState(state);
-                        setEdge("notwall", changed, ...edge);
-                    }
+        return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 0) return;
+            for (const dir of ["north", "south", "east", "west"]) {
+                const edge = lookupEdge(dir as Cardinal, x, y);
+                const kind = getEdge(...edge);
+                if (kind !== "notwall") {
+                    setEdge("notwall", ...edge);
                 }
             }
-        }
-        return changed;
+        });
     });
 
     /**
@@ -413,29 +437,25 @@ export namespace Strategies {
      */
     export const AdjacentThrees = register(function* AdjacentThrees(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-        let changed: State | undefined = undefined;
-        for (let x = 0; x < state.grid.length; x++) {
-            for (let y = 0; y < state.grid[x].length; y++) {
-                if (state.grid[x][y] !== 3) continue;
-                // Horizontal
-                if (state.grid[x + 1][y] === 3) {
-                    [
-                        lookupEdge(changed || state, Cardinal.west, x, y),
-                        lookupEdge(changed || state, Cardinal.west, x + 1, y),            
-                        lookupEdge(changed || state, Cardinal.east, x + 1, y),
-                    ].forEach(e => setEdge("wall", changed || state, ...e));
-                }
-                // Vertical
-                if (state.grid[x][y + 1] === 3) {
-                    [
-                        lookupEdge(changed || state, Cardinal.north, x, y),
-                        lookupEdge(changed || state, Cardinal.north, x, y + 1),            
-                        lookupEdge(changed || state, Cardinal.south, x, y + 1),
-                    ].forEach(e => setEdge("wall", changed || state, ...e));
-                }
+        return forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 3) return;
+            // Horizontal
+            if (getGridElement(x + 1, y) === 3) {
+                [
+                    lookupEdge(Cardinal.west, x, y),
+                    lookupEdge(Cardinal.west, x + 1, y),            
+                    lookupEdge(Cardinal.east, x + 1, y),
+                ].forEach(e => setEdge("wall", ...e));
             }
-        }
-        return changed;
+            // Vertical
+            if (getGridElement(x, y + 1) === 3) {
+                [
+                    lookupEdge(Cardinal.north, x, y),
+                    lookupEdge(Cardinal.north, x, y + 1),            
+                    lookupEdge(Cardinal.south, x, y + 1),
+                ].forEach(e => setEdge("wall", ...e));
+            }
+        });
     });
 
     /**
