@@ -20,6 +20,8 @@ As far as edges are concerned, array lengths should be based on grid lengths:
                inner (y) length = grid[0].length;
 
 */
+function affectingGridSquares(state: State, which: RowColumn, x: number, y: number): IterableIterator<[number, number]>;
+function affectingGridSquares(state: State, ...tuple: (RowColumn | number)[]): IterableIterator<[number, number]>;
 function* affectingGridSquares(state: State, which: RowColumn, x: number, y: number): IterableIterator<[number, number]> {
     switch (which) {
         case RowColumn.row:
@@ -337,9 +339,11 @@ export namespace Strategies {
     ) => any
     function forEachGridSquare(state: State, action: ForEachGridSquareAction) {
         let changed: State | undefined = undefined;
+        let violation = false;
         for (let x = 0; x < state.grid.length; x++) {
             for (let y = 0; y< state.grid[x].length; y++) {
                 action(x, y, getGridElement, lookupEdgeInternal, getEdgeInternal, setEdgeInternal);
+                if (violation) return undefined; // If the set edge function marks a constraint violation, return no new state
             }
         }
         return changed;
@@ -358,7 +362,14 @@ export namespace Strategies {
 
         function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
             if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
-            return setEdge(es, changed || state, ...tuple);
+            const val = setEdge(es, changed || state, ...tuple);
+
+            // Validate numeric constraints adjacent to the placed edge (save loop checking for elsewhere)
+            for (const [x, y] of affectingGridSquares(changed, ...tuple)) {
+                
+            }
+
+            return val;
         }
     }
 
@@ -442,7 +453,7 @@ export namespace Strategies {
      * 
      *   3 3
      *   3 3
-     * Imply there is no valid solution to the puzzle.
+     * Imply there is no valid solution to the puzzle (this is not explicitly checked for here, but is worth mentioning).
      */
     export const AdjacentThrees = register(function* AdjacentThrees(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
