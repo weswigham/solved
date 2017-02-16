@@ -127,11 +127,10 @@ export class Solver extends StrategicAbstractSolver<State> {
             for (let y = 0; y < state.grid[0].length; y++) {
                 const count = state.grid[x][y];
                 if (typeof count === "number") {
-                    const walls = getEdge(state, ...lookupEdge(state, Cardinal.north, x, y)) === "wall" ? 1 : 0 +
-                    getEdge(state, ...lookupEdge(state, Cardinal.east, x, y)) === "wall" ? 1 : 0 +
-                    getEdge(state, ...lookupEdge(state, Cardinal.south, x, y)) === "wall" ? 1 : 0 +
-                    getEdge(state, ...lookupEdge(state, Cardinal.west, x, y)) === "wall" ? 1 : 0;
+                    const edges = directions.map(d => lookupEdge(state, d, x, y));
+                    const walls = edges.reduce((acc, val) => (getEdge(state, ...val) === "wall" ? 1 : 0) + acc, 0)
                     if (walls != count) {
+                        if (this.printStates) console.log(`Constraints on state invalid - not a solution (expected ${count}, found ${walls} at (${x}, ${y}))`);
                         return false;
                     }
                 }
@@ -144,11 +143,9 @@ export class Solver extends StrategicAbstractSolver<State> {
         // there must be multiple loops or edge chains.
         let totalEdges = 0;
         let startingEdge: [RowColumn, number, number] = undefined;
-        for (const type of (Object.keys(EdgeState) as RowColumn[])) {
-            // We can let x and y overflow beyond array bounds by one, since OOB array access just
-            // returns `undefined` - same as an empty edge
-            for (let x = 0; x < state.grid.length + 1; x++) {
-                for (let y = 0; y < state.grid[0].length; y++) {
+        for (const type of (["row", "column"] as RowColumn[])) {
+            for (let x = 0; x < state.edges[type].length; x++) {
+                for (let y = 0; y < state.edges[type][x].length; y++) {
                     if (state.edges[type][x][y] === "wall") {
                         totalEdges++;
                         if (!startingEdge) {
@@ -162,145 +159,50 @@ export class Solver extends StrategicAbstractSolver<State> {
             // If there's no edges...yet all constraints are satisfied... Then this must be a puzzles with no 
             // constraints or only '0' grid constraints. We'll assume that even in this case, you have to place
             // edges to make a loop and there to be a solution.
+            if (this.printStates) console.log(`No edges - not a solution.`);
             return false;
         }
 
         let startPainted = 0;
         let followed = 0;
+
+        function sameEdge(a: [RowColumn, number, number], b: [RowColumn, number, number]) {
+            if (!a || !b) return false;
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+        }
+
         // If we follow a row, then follow it out the side we didn't come from
-        const followRow = (x: number, y: number, from: Cardinal): boolean => {
+        const follow = (to: [RowColumn, number, number], from: [RowColumn, number, number]): boolean => {
             followed++;
-            if (followed > totalEdges) {
+            if ((followed + 1) > totalEdges) { // +1 since we hti the start twice
                 throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
             }
-            if (from === Cardinal.north || from === Cardinal.south) throw new Error("Must specify which direction the edge is entered from.");
-            if (startingEdge[0] === "row" && startingEdge[1] === x && startingEdge[2] === y) {
+            if (sameEdge(startingEdge, to)) {
                 startPainted++;
                 if (startPainted > 1) {
                     return true;
                 }
             }
-            switch (from) {
-                // From the west, exit on one of the three connections on the right edge
-                case Cardinal.west: {
-                    // First, verify that only one wall exits
-                    const up = lookupEdge(state, Cardinal.east, x, y - 1);
-                    const right = lookupEdge(state, Cardinal.north, x + 1, y);
-                    const down = lookupEdge(state, Cardinal.east, x, y + 1);
-                    const filtered = [up, down, right].filter(e => getEdge(state, ...e) === "wall");
-                    if (filtered.length !== 1) {
-                        return false;
-                    }
-                    // Then just walk to the next edge
-                    const selected = filtered[0];
-                    if (selected === up) {
-                        return followColumn(selected[1], selected[2], Cardinal.south);
-                    }
-                    if (selected === down) {
-                        return followColumn(selected[1], selected[2], Cardinal.north);
-                    }
-                    if (selected === right) {
-                        return followRow(selected[1], selected[2], Cardinal.west);
-                    }
-                    break;
-                }
-                // From the east, ext from one of the three connections on the left edge
-                case Cardinal.east: {
-                    // First, verify that only one wall exits
-                    const up = lookupEdge(state, Cardinal.east, x, y - 1);
-                    const left = lookupEdge(state, Cardinal.north, x - 1, y);
-                    const down = lookupEdge(state, Cardinal.east, x, y + 1);
-                    const filtered = [up, down, left].filter(e => getEdge(state, ...e) === "wall");
-                    if (filtered.length !== 1) {
-                        return false;
-                    }
-                    // Then just walk to the next edge
-                    const selected = filtered[0];
-                    if (selected === up) {
-                        return followColumn(selected[1], selected[2], Cardinal.south);
-                    }
-                    if (selected === down) {
-                        return followColumn(selected[1], selected[2], Cardinal.north);
-                    }
-                    if (selected === left) {
-                        return followRow(selected[1], selected[2], Cardinal.east);
-                    }
-                    break;
-                }
-            }
-        }
 
-        const followColumn = (x: number, y: number, from: Cardinal): boolean => {
-            followed++;
-            if (followed > totalEdges) {
-                throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
+            const setOne = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.west : Cardinal.north)];
+            const setTwo = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.east : Cardinal.south)];
+            const activeSet = setOne.find(e => sameEdge(e, from)) ? setTwo : setOne;
+            const walls = activeSet.filter(e => getEdge(state, ...e) === "wall");
+            if (walls.length !== 1) {
+                if (this.printStates) console.log(`Found ${walls.length} edges from edge (${to[0]}, ${to[1]}, ${to[2]}) but expected 1 - not a solution`);
+                return false;
             }
-            if (from === Cardinal.west || from === Cardinal.east) throw new Error("Must specify which direction the edge is entered from.");
-            if (startingEdge[0] === "column" && startingEdge[1] === x && startingEdge[2] === y) {
-                startPainted++;
-                if (startPainted > 1) {
-                    return true;
-                }
-            }
-            switch (from) {
-                // From the north, exit on one of the three connections on the bottom edge
-                case Cardinal.north: {
-                    // First, verify that only one wall exits
-                    const left = lookupEdge(state, Cardinal.north, x - 1, y);
-                    const right = lookupEdge(state, Cardinal.north, x + 1, y);
-                    const down = lookupEdge(state, Cardinal.east, x, y + 1);
-                    const filtered = [left, down, right].filter(e => getEdge(state, ...e) === "wall");
-                    if (filtered.length !== 1) {
-                        return false;
-                    }
-                    // Then just walk to the next edge
-                    const selected = filtered[0];
-                    if (selected === left) {
-                        return followColumn(selected[1], selected[2], Cardinal.east);
-                    }
-                    if (selected === down) {
-                        return followColumn(selected[1], selected[2], Cardinal.north);
-                    }
-                    if (selected === right) {
-                        return followRow(selected[1], selected[2], Cardinal.west);
-                    }
-                    break;
-                }
-                // From the south, exit from one of the three connections on the north edge
-                case Cardinal.south: {
-                    // First, verify that only one wall exits
-                    const up = lookupEdge(state, Cardinal.east, x, y - 1);
-                    const left = lookupEdge(state, Cardinal.north, x - 1, y);
-                    const right = lookupEdge(state, Cardinal.north, x + 1, y);
-                    const filtered = [up, right, left].filter(e => getEdge(state, ...e) === "wall");
-                    if (filtered.length !== 1) {
-                        return false;
-                    }
-                    // Then just walk to the next edge
-                    const selected = filtered[0];
-                    if (selected === up) {
-                        return followColumn(selected[1], selected[2], Cardinal.south);
-                    }
-                    if (selected === right) {
-                        return followColumn(selected[1], selected[2], Cardinal.west);
-                    }
-                    if (selected === left) {
-                        return followRow(selected[1], selected[2], Cardinal.east);
-                    }
-                    break;
-                }
-            }
-        }
+            return follow(walls[0], to);
+        };
 
-        const looped = startingEdge[0] === "row" ?
-            followRow(startingEdge[1], startingEdge[2], Cardinal.west) :
-            followColumn(startingEdge[1], startingEdge[2], Cardinal.north);
+        const looped = follow(startingEdge, undefined);
         if (!looped) {
             return false; // Traversed a nonloop - must be a loop
         }
         if (followed > totalEdges) {
             throw new Error("Somehow followed a valid loop across more edges than the graph had!");
         }
+        console.log(`Followed around ${followed} out of ${totalEdges} edges`);
         return followed === totalEdges;
     }
     display(state: State) {
@@ -341,7 +243,7 @@ function cloneState(state: State): State {
             }
         }
     }
-    return state;
+    return newState;
 }
 
 
@@ -405,6 +307,12 @@ export namespace Strategies {
 
         function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
             if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
+            const cur = getEdge(changed || state, ...tuple);
+            if (cur === es) return es;
+            if (cur !== undefined && cur !== es) {
+                violation = true;
+                return;
+            }
             const val = setEdge(es, changed || state, ...tuple);
 
             // Validate numeric constraints adjacent to the placed edge (save loop checking for elsewhere)
@@ -862,7 +770,7 @@ export namespace Strategies {
      */
     export const NonWallsByOnes = register(function* NonWallsByOnes(state: State) {
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
-            if (getGridElement(x, y) !== 3) return;
+            if (getGridElement(x, y) !== 1) return;
             // Incoming walls
             // Upper left
             if ([
@@ -975,14 +883,18 @@ export namespace Strategies {
             const wallCount = connectedEdges.reduce((acc, val) => (getEdge(changed || state, ...val) === "wall" ? 1 : 0) + acc, 0);
             const nonWallCount = connectedEdges.reduce((acc, val) => (getEdge(changed || state, ...val) === "notwall" ? 1 : 0) + acc, 0);
             if (wallCount === 1 && nonWallCount === 2) {
-                changed = changed || cloneState(state);
-                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("wall", changed, ...e));
+                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdgeInternal("wall", ...e));
             }
             else if ((wallCount === 2 && nonWallCount !== 2) || nonWallCount === 3) {
-                changed = changed || cloneState(state);
-                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("notwall", changed, ...e));
+                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdgeInternal("notwall", ...e));
             }
         }
+
+        function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
+            if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
+            return setEdge(es, changed || state, ...tuple);
+        }
+
     });
 
     /**
@@ -995,17 +907,23 @@ export namespace Strategies {
                 for (let y = 0; y < state.edges[kind][x].length; y++) {
                     if (state.edges[kind][x][y] !== "wall") continue;
                     for (const edge of connectingEdges(state, kind, x, y, kind === "row" ? Cardinal.east : Cardinal.south)) {
-                        if (getEdge(state, ...edge) === undefined) {
+                        const originalState = getEdge(changed || state, ...edge);
+                        if (originalState === undefined) {
                             const newState = cloneState(changed || state);
                             setEdge("wall", newState, ...edge);
                             yield newState;
                             // If we continue iteration, then that guess didn't pan out - it's therefore not a wall (or there's no solution)!
-                            changed = changed || cloneState(state);
-                            setEdge("notwall", changed, ...edge);
+                            setEdgeInternal("notwall", ...edge);
                         }
                     }
                 }
             }
+        }
+
+
+        function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
+            if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
+            return setEdge(es, changed || state, ...tuple);
         }
     });
 
