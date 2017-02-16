@@ -667,3 +667,36 @@ export namespace Strategies {
         }
     });
 }
+
+
+function Array2D<T>(width: number, height: number): T[][] {
+    return new Array(width).map(e => new Array(height));
+}
+
+/**
+ * Call like so:
+ * (sample problem 1 from http://www.nikoli.com/en/puzzles/slitherlink/)
+ * const initial = parseSlitherlink([
+ *  [ , , , ,0,2, , , , ,], //Trailing comma is required by JS syntax rules to got the correct number of empty elements
+ *  [2,3,0, , , , ,2,2,3,],
+ *  [ , , ,3, , ,3, , , ,],
+ *  [3, , , ,2,2, , , ,1,],
+ *  [ ,2, ,2, , ,0, ,2, ,],
+ *  [ ,2, ,3, , ,3, ,3, ,],
+ *  [3, , , ,1,0, , , ,2,],
+ *  [ , , ,2, , ,3, , , ,],
+ *  [3,0,3, , , , ,3,3,1,],
+ *  [ , , , ,0,2, , , , ,],
+ * ]);
+ */
+export function parseSlitherlink(input: number[][]): State {
+    const width = input[0].length;
+    const height = input.length;
+    const state: State = {grid: Array2D<number>(width, height), edges: {row: Array2D<EdgeState>(width, height + 1), column: Array2D<EdgeState>(width + 1, height)}};
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            state.grid[x][y] = input[y][x];
+        }
+    }
+    return state;
+}
