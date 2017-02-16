@@ -600,12 +600,20 @@ export namespace Strategies {
      */
     export const GuessContinuous = register(function* GuessContinuous(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-        for (const kind of ["row", "column"]) {
-            const type = kind as RowColumn;
-            for (let x = 0; x < state.grid.length + (kind === "column" ? 1 : 0); x++) {
-                for (let y = 0; y < state.grid[0].length + (kind === "row" ? 1 : 0); y++) {
-                    if (state.edges[type][x][y] !== "wall") continue;
-                    
+        let changed: State | undefined = undefined;
+        for (const kind of ["row", "column"] as RowColumn[]) {
+            for (let x = 0; x < state.edges[kind].length; x++) {
+                for (let y = 0; y < state.edges[kind][x].length; y++) {
+                    if (state.edges[kind][x][y] !== "wall") continue;
+                    for (const edge of connectingEdges(state, kind, x, y, kind === "row" ? Cardinal.east : Cardinal.south)) {
+                        if (getEdge(state, ...edge) === undefined) {
+                            const newState = cloneState(changed || state);
+                            setEdge("wall", newState, ...edge);
+                            yield newState;
+                            changed = changed || cloneState(state);
+                            setEdge("notwall", changed, ...edge);
+                        }
+                    }
                 }
             }
         }
