@@ -6,7 +6,6 @@ export abstract class AbstractSolver<TState> {
         if (this.printStates && this.display) {
             console.log(`State number ${this.statesExplored}`);
             this.display(initial);
-            debugger;
         }
         if (this.isSolution(initial)) {
             if (this.printStates) console.log(`State number ${this.statesExplored} is a solution.`);

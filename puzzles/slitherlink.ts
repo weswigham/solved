@@ -173,15 +173,15 @@ export class Solver extends StrategicAbstractSolver<State> {
 
         // If we follow a row, then follow it out the side we didn't come from
         const follow = (to: [RowColumn, number, number], from: [RowColumn, number, number]): boolean => {
-            followed++;
-            if ((followed + 1) > totalEdges) { // +1 since we hti the start twice
-                throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
-            }
             if (sameEdge(startingEdge, to)) {
                 startPainted++;
                 if (startPainted > 1) {
                     return true;
                 }
+            }
+            followed++;
+            if ((followed - 1) > totalEdges) { // -1 since we hit the start twice
+                throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
             }
 
             const setOne = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.west : Cardinal.north)];
