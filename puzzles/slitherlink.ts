@@ -450,7 +450,6 @@ export namespace Strategies {
      * Marks all the edges around a zero as not a wall.
      */
     export const ConstrainZero = register(function* ConstrainZeros(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 0) return;
             for (const dir of directions) {
@@ -472,7 +471,6 @@ export namespace Strategies {
      *  - One adjacent not a wall - all three other sides are walls
      */
     export const ConstrainThree = register(function* ConstrainThree(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = constrain(3, state);
         if (next) yield next;
     });
@@ -483,7 +481,6 @@ export namespace Strategies {
      *  - One adjacent wall - other three sides are not a wall 
      */
     export const ConstrainOne = register(function* ConstrainOne(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = constrain(1, state);
         if (next) yield next;
     });
@@ -494,7 +491,6 @@ export namespace Strategies {
      *  - Two adjacent sides as not walls - other two are marked as walls
      */
     export const ConstrainTwo = register(function* ConstrainTwo(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         let changed: State | undefined = undefined;
         const next = constrain(2, state);
         if (next) yield next;
@@ -511,7 +507,6 @@ export namespace Strategies {
      * Imply there is no valid solution to the puzzle (this is not explicitly checked for here, but is worth mentioning).
      */
     export const AdjacentThrees = register(function* AdjacentThrees(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 3) return;
             // Horizontal
@@ -544,15 +539,24 @@ export namespace Strategies {
 
     /**
      * Threes like so
-     * 3
-     *  3
+     * ·   ·   ·   ·
+     *   3          
+     * ·   ·   ·   ·
+     *       3     
+     * ·   ·   ·   ·
+     *             
+     * ·   ·   ·   ·
      * must have their outer edges as walls.
-     *  3
-     * 3
-     * is the same.
+     * ·---·   ·   ·
+     * | 3          
+     * ·   ·   ·   ·
+     *       3 |   
+     * ·   ·---· x ·
+     *         x   
+     * ·   ·   ·   ·
+     * The diagonal may go either direction.
      */
     export const DiagonalThrees = register(function* DiagonalThrees(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 3) return;
             // Bottom left diagonal
@@ -593,8 +597,8 @@ export namespace Strategies {
      * Threes have implied edges by their surrounding non-adjacent edges
      *  - If a corner has an incoming edge, both edges opposite that corner must be present
      * ·   ·   ·   ·
-     *              
-     * ·   ·---·   ·
+     *         x    
+     * ·   ·---· x ·
      *       3 |    
      * ·---·   ·   ·
      *              
@@ -609,27 +613,89 @@ export namespace Strategies {
      * ·   ·   ·   ·
      */
     export const ThreeDeductions = register(function* ThreeDeductions(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 3) return;
             // Incoming walls
             // Upper left
-
+            if ([
+                lookupEdge(Cardinal.south, x - 1, y - 1),
+                lookupEdge(Cardinal.east, x - 1, y - 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x + 1, y + 1));
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x + 1, y + 1));
+            }
 
             // Upper right
+            if ([
+                lookupEdge(Cardinal.south, x + 1, y - 1),
+                lookupEdge(Cardinal.west, x + 1, y - 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x - 1, y + 1));
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x - 1, y + 1));
+            }
 
             // Lower left
+            if ([
+                lookupEdge(Cardinal.north, x - 1, y + 1),
+                lookupEdge(Cardinal.east, x - 1, y + 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x + 1, y - 1));
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x + 1, y - 1));
+            }
 
-            // Upper right
+            // Lower right
+            if ([
+                lookupEdge(Cardinal.north, x + 1, y + 1),
+                lookupEdge(Cardinal.west, x + 1, y + 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x - 1, y - 1));
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x - 1, y - 1));
+            }
 
             // Incoming not walls
             // Upper left
+            if ([
+                lookupEdge(Cardinal.south, x - 1, y - 1),
+                lookupEdge(Cardinal.east, x - 1, y - 1)
+            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
+            }
 
             // Upper right
+            if ([
+                lookupEdge(Cardinal.south, x + 1, y - 1),
+                lookupEdge(Cardinal.west, x + 1, y - 1)
+            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
+            }
 
             // Lower left
+            if ([
+                lookupEdge(Cardinal.north, x - 1, y + 1),
+                lookupEdge(Cardinal.east, x - 1, y + 1)
+            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
+            }
 
-            // Upper right
+            // Lower right
+            if ([
+                lookupEdge(Cardinal.north, x + 1, y + 1),
+                lookupEdge(Cardinal.west, x + 1, y + 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
+            }
 
         });
         if (next) yield next;
@@ -648,7 +714,86 @@ export namespace Strategies {
      * ·   ·   ·   ·
      */
     export const TwoWings = register(function* TwoWings(state: State) {
+        const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 2) return;
 
+            /**
+              * ·   ·   ·   ·
+              *     x   x    
+              * · x ·   ·---·
+              *       2      
+              * · x ·   ·   ·
+              *     |        
+              * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y - 1),
+                lookupEdge(Cardinal.east, x, y - 1),
+                lookupEdge(Cardinal.north, x - 1, y),
+                lookupEdge(Cardinal.south, x - 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 4) {
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y + 1));
+                setEdge("wall", ...lookupEdge(Cardinal.north, x + 1, y));
+            }
+
+            /**
+              * ·   ·   ·   ·
+              *     x   x    
+              * ·---·   · x ·
+              *       2      
+              * ·   ·   · x ·
+              *         |    
+              * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y - 1),
+                lookupEdge(Cardinal.east, x, y - 1),
+                lookupEdge(Cardinal.north, x + 1, y),
+                lookupEdge(Cardinal.south, x + 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 4) {
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y + 1));
+                setEdge("wall", ...lookupEdge(Cardinal.north, x - 1, y));
+            }
+
+            /**
+              * ·   ·   ·   ·
+              *     |        
+              * · x ·   ·   ·
+              *       2      
+              * · x ·   ·---·
+              *     x   x    
+              * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y + 1),
+                lookupEdge(Cardinal.east, x, y + 1),
+                lookupEdge(Cardinal.north, x - 1, y),
+                lookupEdge(Cardinal.south, x - 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 4) {
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y - 1));
+                setEdge("wall", ...lookupEdge(Cardinal.south, x + 1, y));
+            }
+
+            /**
+              * ·   ·   ·   ·
+              *         |    
+              * ·   ·   · x ·
+              *       2      
+              * ·---·   · x ·
+              *     x   x    
+              * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y + 1),
+                lookupEdge(Cardinal.east, x, y + 1),
+                lookupEdge(Cardinal.north, x + 1, y),
+                lookupEdge(Cardinal.south, x + 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 4) {
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y - 1));
+                setEdge("wall", ...lookupEdge(Cardinal.south, x - 1, y));
+            }
+        });
+        if (next) yield next;
     });
 
 
@@ -664,7 +809,46 @@ export namespace Strategies {
      * ·   ·   ·   ·
      */
     export const IncomingOnes = register(function* IncomingOnes(state: State) {
+        const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
+            if (getGridElement(x, y) !== 3) return;
+            // Incoming walls
+            // Upper left
+            if ([
+                lookupEdge(Cardinal.south, x - 1, y - 1),
+                lookupEdge(Cardinal.east, x - 1, y - 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            }
 
+            // Upper right
+            if ([
+                lookupEdge(Cardinal.south, x + 1, y - 1),
+                lookupEdge(Cardinal.west, x + 1, y - 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            }
+
+            // Lower left
+            if ([
+                lookupEdge(Cardinal.north, x - 1, y + 1),
+                lookupEdge(Cardinal.east, x - 1, y + 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            }
+
+            // Lower right
+            if ([
+                lookupEdge(Cardinal.north, x + 1, y + 1),
+                lookupEdge(Cardinal.west, x + 1, y + 1)
+            ].filter(e => getEdge(...e) === "wall").length === 1) {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            }
+        });
+        if (next) yield next;
     });
 
 
@@ -680,7 +864,6 @@ export namespace Strategies {
      * This can be applied to all corners of a 1.
      */
     export const OnesByNonWalls = register(function* OnesByNonWalls(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 1) return;
             // Upper left corner
@@ -717,7 +900,6 @@ export namespace Strategies {
      *  - If there is already an outgoing and incoming wall, ensure the other two possibilities are marked as not a wall
      */
     export const FollowedEdges = register(function* FollowedEdges(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         let changed: State | undefined = undefined;
         for (const kind of ["row", "column"] as RowColumn[]) {
             for (let x = 0; x < state.edges[kind].length; x++) {
@@ -753,7 +935,6 @@ export namespace Strategies {
      * Enumerate all unconnected edges and all viable paths out of those edges
      */
     export const GuessContinuous = register(function* GuessContinuous(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         let changed: State | undefined = undefined;
         for (const kind of ["row", "column"] as RowColumn[]) {
             for (let x = 0; x < state.edges[kind].length; x++) {
@@ -778,7 +959,6 @@ export namespace Strategies {
      * Enumerate all partially or unconstrained numbers and the adjacent possible edges
      */
     export const GuessConstrained = register(function* GuessConstrained(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         let changed: State | undefined = undefined;
         for (let x = 0; x < state.grid.length; x++) {
             for (let y = 0; y < state.grid.length; y++) {
@@ -803,7 +983,6 @@ export namespace Strategies {
      * Enumerate all unconstrained edges - Should only ever be hit on a board with only zeroes as constraints.
      */
     export const GuessBlank = register(function* GuessBlank(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
         let changed: State | undefined = undefined;
         for (const kind of ["row", "column"] as RowColumn[]) {
             for (let x = 0; x < state.edges[kind].length; x++) {
