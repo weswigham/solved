@@ -4,7 +4,6 @@ import {Slitherlink} from "../";
 
 describe("a slitherlink solver", () => {
     it("should be able to parse and solve an easy slitherlink puzzle", () => {
-        debugger;
         const initial = Slitherlink.newState([
             [ , , , ,0,2, , , , ,],
             [2,3,0, , , , ,2,2,3,],
