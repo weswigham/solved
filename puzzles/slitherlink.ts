@@ -558,8 +558,9 @@ export namespace Strategies {
 
     /**
      * For all existing edges:
-     *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
      *  - If a point has three not-a-wall going into it, the last edge going into the point must not be a wall
+     *  - If there is not a connecting edge in one direction, if there is only one possible following edge, add it
+     *  - If there is already an outgoing and incoming wall, ensure the other two possibilities are marked as not a wall
      */
     export const FollowedEdges = register(function* FollowedEdges(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
@@ -567,34 +568,31 @@ export namespace Strategies {
         for (const kind of ["row", "column"] as RowColumn[]) {
             for (let x = 0; x < state.edges[kind].length; x++) {
                 for (let y = 0; y< state.edges[kind][x].length; y++) {
-                    if (state.edges[kind][x][y] !== "wall") continue;
+                    // Only handle one side of each edge (east or south) to avoid processing any edge cluster twice
                     if (kind === "row") {
-                        const westEdges = [...connectingEdges(changed || state, kind, x, y, Cardinal.west)];
-                        const wallCount = westEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "wall" ? 1 : 0, 0);
-                        const nonWallCount = westEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "notwall" ? 1 : 0, 0);
-                        if (wallCount < 1 && nonWallCount === 2) {
-                            changed = changed || cloneState(state);
-                            westEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("wall", changed, ...e));
-                        }
-                        connectingEdges(changed || state, kind, x, y, Cardinal.east);
+                        handleDirection(Cardinal.east, kind, x, y);
                     }
                     else {
-                        connectingEdges(changed || state, kind, x, y, Cardinal.north);
-                        connectingEdges(changed || state, kind, x, y, Cardinal.south);
+                        handleDirection(Cardinal.south, kind, x, y);
                     }
                 }
             }
         }
         return changed;
-    });
 
-    /**
-     * For all existing edges:
-     *  - If there is already a connecting edge in a direction, mark both other options as not a wall
-     */
-    export const AdjacentEdges = register(function* AdjacentEdges(state: State) {
-        if (!!false) yield state; // Somehow this is needed to fix TS type inference
-
+        function handleDirection(dir: Cardinal, kind: RowColumn, x: number, y: number) {
+            const connectedEdges = [[kind, x, y], ...connectingEdges(changed || state, kind, x, y, dir)];
+            const wallCount = connectedEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "wall" ? 1 : 0, 0);
+            const nonWallCount = connectedEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "notwall" ? 1 : 0, 0);
+            if (wallCount === 1 && nonWallCount === 2) {
+                changed = changed || cloneState(state);
+                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("wall", changed, ...e));
+            }
+            else if ((wallCount === 2 && nonWallCount !== 2) || nonWallCount === 3) {
+                changed = changed || cloneState(state);
+                connectedEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("notwall", changed, ...e));
+            }
+        }
     });
 
     /**
