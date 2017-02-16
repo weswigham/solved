@@ -12,7 +12,7 @@ export interface State extends StrategicState {
     edges: {[x in RowColumn]: (EdgeState | undefined)[][]};
 }
 
-const directions = Object.keys(Cardinal);
+const directions = Object.keys(Cardinal) as Cardinal[];
 
 /*
 As far as edges are concerned, array lengths should be based on grid lengths:
@@ -610,6 +610,7 @@ export namespace Strategies {
                             const newState = cloneState(changed || state);
                             setEdge("wall", newState, ...edge);
                             yield newState;
+                            // If we continue iteration, then that guess didn't pan out - it's therefore not a wall (or there's no solution)!
                             changed = changed || cloneState(state);
                             setEdge("notwall", changed, ...edge);
                         }
@@ -620,11 +621,28 @@ export namespace Strategies {
     });
 
     /**
-     * Enumerate all partially or unconstrained numbers and the adjacent possible edges (skip edges connected to other edged - GuessContinuous should hit them)
+     * Enumerate all partially or unconstrained numbers and the adjacent possible edges
      */
     export const GuessConstrained = register(function* GuessConstrained(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-
+        let changed: State | undefined = undefined;
+        for (let x = 0; x < state.grid.length; x++) {
+            for (let y = 0; y < state.grid.length; y++) {
+                if (state.grid[x][y] === undefined) continue;
+                // TODO: Only need to lookup North and West edges for all squares except the lower rightmost one - this is duplicating guesses
+                for (const dir of directions) {
+                    const edge = lookupEdge(changed || state, dir, x, y);
+                    if (getEdge(changed || state, ...edge) === undefined) {
+                        const newState = cloneState(changed || state);
+                        setEdge("wall", newState, ...edge);
+                        yield newState;
+                        // If iteration continues, then it must not be a wall (or there's no solution)
+                        changed = changed || cloneState(state);
+                        setEdge("notwall", changed, ...edge);
+                    }
+                }
+            }
+        }
     });
 
     /**
@@ -632,6 +650,20 @@ export namespace Strategies {
      */
     export const GuessBlank = register(function* GuessBlank(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-
+        let changed: State | undefined = undefined;
+        for (const kind of ["row", "column"] as RowColumn[]) {
+            for (let x = 0; x < state.edges[kind].length; x++) {
+                for (let y = 0; y < state.edges[kind][x].length; y++) {
+                    if (state.edges[kind][x][y] === undefined) {
+                        const newState = cloneState(changed || state);
+                        setEdge("wall", newState, kind, x, y);
+                        yield newState;
+                        // If iteration continues, then the prior guess didn't pan out - mark it as not a wall
+                        changed = changed || cloneState(state);
+                        setEdge("notwall", changed, kind, x, y);
+                    }
+                }
+            }
+        }
     });
 }
