@@ -61,6 +61,35 @@ function lookupEdge(state: State, direction: Cardinal, x: number, y: number): [R
     }
 }
 
+function* connectingEdges(state: State, type: RowColumn, x: number, y: number, side: Cardinal): IterableIterator<[RowColumn, number, number]> {
+    if (type === "row") {
+        if (side === Cardinal.north || side === Cardinal.south) throw new Error("Invalid arguments - can't get sides other than west or east for a row edge");
+        if (side === Cardinal.west) {
+            yield ["row", x - 1, y];
+            yield ["column", x, y];
+            yield ["column", x, y - 1];
+        }
+        else {
+            yield ["row", x + 1, y];
+            yield ["column", x + 1, y];
+            yield ["column", x + 1, y - 1];
+        }
+    }
+    else {
+        if (side === Cardinal.west || side === Cardinal.east) throw new Error("Invalid arguments - can't get sides other than south or north for a column edge");
+        if (side === Cardinal.north) {
+            yield ["column", x, y - 1];
+            yield ["row", x - 1, y];
+            yield ["row", x, y];
+        }
+        else {
+            yield ["column", x, y + 1];
+            yield ["row", x - 1, y + 1];
+            yield ["row", x, y + 1];
+        }
+    }
+}
+
 
 function getEdge(state: State, kind: RowColumn, x: number, y: number): EdgeState;
 function getEdge(state: State, ...tuple: (RowColumn | number)[]): EdgeState;
@@ -534,7 +563,29 @@ export namespace Strategies {
      */
     export const FollowedEdges = register(function* FollowedEdges(state: State) {
         if (!!false) yield state; // Somehow this is needed to fix TS type inference
-
+        let changed: State | undefined = undefined;
+        for (const kind of ["row", "column"] as RowColumn[]) {
+            for (let x = 0; x < state.edges[kind].length; x++) {
+                for (let y = 0; y< state.edges[kind][x].length; y++) {
+                    if (state.edges[kind][x][y] !== "wall") continue;
+                    if (kind === "row") {
+                        const westEdges = [...connectingEdges(changed || state, kind, x, y, Cardinal.west)];
+                        const wallCount = westEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "wall" ? 1 : 0, 0);
+                        const nonWallCount = westEdges.reduce((acc, val) => getEdge(changed || state, ...val) === "notwall" ? 1 : 0, 0);
+                        if (wallCount < 1 && nonWallCount === 2) {
+                            changed = changed || cloneState(state);
+                            westEdges.filter(e => getEdge(changed || state, ...e) === undefined).forEach(e => setEdge("wall", changed, ...e));
+                        }
+                        connectingEdges(changed || state, kind, x, y, Cardinal.east);
+                    }
+                    else {
+                        connectingEdges(changed || state, kind, x, y, Cardinal.north);
+                        connectingEdges(changed || state, kind, x, y, Cardinal.south);
+                    }
+                }
+            }
+        }
+        return changed;
     });
 
     /**
