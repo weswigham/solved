@@ -665,7 +665,7 @@ export namespace Strategies {
             if ([
                 lookupEdge(Cardinal.south, x - 1, y - 1),
                 lookupEdge(Cardinal.east, x - 1, y - 1)
-            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
                 setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
                 setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
             }
@@ -674,7 +674,7 @@ export namespace Strategies {
             if ([
                 lookupEdge(Cardinal.south, x + 1, y - 1),
                 lookupEdge(Cardinal.west, x + 1, y - 1)
-            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
                 setEdge("wall", ...lookupEdge(Cardinal.north, x, y));
                 setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
             }
@@ -683,7 +683,7 @@ export namespace Strategies {
             if ([
                 lookupEdge(Cardinal.north, x - 1, y + 1),
                 lookupEdge(Cardinal.east, x - 1, y + 1)
-            ].filter(e => getEdge(...e) === "notwall").length === 1) {
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
                 setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
                 setEdge("wall", ...lookupEdge(Cardinal.west, x, y));
             }
@@ -692,7 +692,7 @@ export namespace Strategies {
             if ([
                 lookupEdge(Cardinal.north, x + 1, y + 1),
                 lookupEdge(Cardinal.west, x + 1, y + 1)
-            ].filter(e => getEdge(...e) === "wall").length === 1) {
+            ].filter(e => getEdge(...e) === "wall").length === 2) {
                 setEdge("wall", ...lookupEdge(Cardinal.south, x, y));
                 setEdge("wall", ...lookupEdge(Cardinal.east, x, y));
             }
@@ -701,114 +701,166 @@ export namespace Strategies {
         if (next) yield next;
     });
 
-
     /**
-     * Given a two, if two sides have both parallel incoming edges marked as not a wall,
-     * it must have the following incoming walls:
-     * ·   ·   ·   ·
-     *         |    
-     * ·   ·   · x ·
-     *       2      
-     * ·---·   · x ·
-     *     x   x    
-     * ·   ·   ·   ·
+     * If two parallel not a walls are ajacent with a two with another not a wall colinear with it,
+     * it implies an wall opposite that not a wall. See charts of each case within the strategy if this
+     *  sounds confusing.
      */
-    export const TwoWings = register(function* TwoWings(state: State) {
+    export const TwosSemicorner = register(function* TwosSemicorner(state: State) {
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 2) return;
-
             /**
-              * ·   ·   ·   ·
-              *     x   x    
-              * · x ·   ·---·
-              *       2      
-              * · x ·   ·   ·
-              *     |        
-              * ·   ·   ·   ·
-             */
-            if ([
-                lookupEdge(Cardinal.west, x, y - 1),
-                lookupEdge(Cardinal.east, x, y - 1),
-                lookupEdge(Cardinal.north, x - 1, y),
-                lookupEdge(Cardinal.south, x - 1, y),
-            ].filter(e => getEdge(...e) === "notwall").length === 4) {
-                setEdge("wall", ...lookupEdge(Cardinal.west, x, y + 1));
-                setEdge("wall", ...lookupEdge(Cardinal.north, x + 1, y));
-            }
-
-            /**
-              * ·   ·   ·   ·
-              *     x   x    
-              * ·---·   · x ·
-              *       2      
-              * ·   ·   · x ·
-              *         |    
-              * ·   ·   ·   ·
-             */
-            if ([
-                lookupEdge(Cardinal.west, x, y - 1),
-                lookupEdge(Cardinal.east, x, y - 1),
-                lookupEdge(Cardinal.north, x + 1, y),
-                lookupEdge(Cardinal.south, x + 1, y),
-            ].filter(e => getEdge(...e) === "notwall").length === 4) {
-                setEdge("wall", ...lookupEdge(Cardinal.east, x, y + 1));
-                setEdge("wall", ...lookupEdge(Cardinal.north, x - 1, y));
-            }
-
-            /**
-              * ·   ·   ·   ·
-              *     |        
-              * · x ·   ·   ·
-              *       2      
-              * · x ·   ·---·
-              *     x   x    
-              * ·   ·   ·   ·
+             * ·   ·   ·   ·
+             *              
+             * ·   ·   ·   ·
+             *       2      
+             * ·---·   · x ·
+             *     x   x    
+             * ·   ·   ·   ·
              */
             if ([
                 lookupEdge(Cardinal.west, x, y + 1),
                 lookupEdge(Cardinal.east, x, y + 1),
-                lookupEdge(Cardinal.north, x - 1, y),
+                lookupEdge(Cardinal.south, x + 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.south, x - 1, y));
+            }
+
+            /**
+             * ·   ·   ·   ·
+             *              
+             * ·   ·   ·   ·
+             *       2      
+             * · x ·   ·---·
+             *     x   x    
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y + 1),
+                lookupEdge(Cardinal.east, x, y + 1),
                 lookupEdge(Cardinal.south, x - 1, y),
-            ].filter(e => getEdge(...e) === "notwall").length === 4) {
-                setEdge("wall", ...lookupEdge(Cardinal.west, x, y - 1));
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
                 setEdge("wall", ...lookupEdge(Cardinal.south, x + 1, y));
             }
 
             /**
-              * ·   ·   ·   ·
-              *         |    
-              * ·   ·   · x ·
-              *       2      
-              * ·---·   · x ·
-              *     x   x    
-              * ·   ·   ·   ·
+             * ·   ·   ·   ·
+             *         |    
+             * ·   ·   · x ·
+             *       2      
+             * ·   ·   · x ·
+             *         x    
+             * ·   ·   ·   ·
              */
             if ([
-                lookupEdge(Cardinal.west, x, y + 1),
-                lookupEdge(Cardinal.east, x, y + 1),
                 lookupEdge(Cardinal.north, x + 1, y),
                 lookupEdge(Cardinal.south, x + 1, y),
-            ].filter(e => getEdge(...e) === "notwall").length === 4) {
+                lookupEdge(Cardinal.east, x, y + 1),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
                 setEdge("wall", ...lookupEdge(Cardinal.east, x, y - 1));
-                setEdge("wall", ...lookupEdge(Cardinal.south, x - 1, y));
+            }
+
+
+            /**
+             * ·   ·   ·   ·
+             *         x    
+             * ·   ·   · x ·
+             *       2      
+             * ·   ·   · x ·
+             *         |    
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.north, x + 1, y),
+                lookupEdge(Cardinal.south, x + 1, y),
+                lookupEdge(Cardinal.east, x, y - 1),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.east, x, y + 1));
+            }
+
+            /**
+             * ·   ·   ·   ·
+             *     x   x    
+             * ·---·   · x ·
+             *       2      
+             * ·   ·   ·   ·
+             *              
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y - 1),
+                lookupEdge(Cardinal.east, x, y - 1),
+                lookupEdge(Cardinal.north, x + 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x - 1, y));
+            }
+
+            /**
+             * ·   ·   ·   ·
+             *     x   x    
+             * · x ·   ·---·
+             *       2      
+             * ·   ·   ·   ·
+             *              
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.west, x, y - 1),
+                lookupEdge(Cardinal.east, x, y - 1),
+                lookupEdge(Cardinal.north, x - 1, y),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.north, x + 1, y));
+            }
+
+            /**
+             * ·   ·   ·   ·
+             *     x       
+             * · x ·   ·   ·
+             *       2      
+             * · x ·   ·   ·
+             *     |        
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.north, x - 1, y),
+                lookupEdge(Cardinal.south, x - 1, y),
+                lookupEdge(Cardinal.west, x, y - 1),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y + 1));
+            }
+
+            /**
+             * ·   ·   ·   ·
+             *     |       
+             * · x ·   ·   ·
+             *       2      
+             * · x ·   ·   ·
+             *     x        
+             * ·   ·   ·   ·
+             */
+            if ([
+                lookupEdge(Cardinal.north, x - 1, y),
+                lookupEdge(Cardinal.south, x - 1, y),
+                lookupEdge(Cardinal.west, x, y + 1),
+            ].filter(e => getEdge(...e) === "notwall").length === 3) {
+                setEdge("wall", ...lookupEdge(Cardinal.west, x, y - 1));
             }
         });
         if (next) yield next;
     });
 
-
     /**
-     * Given a one, if there is an incoming edge,
-     * the opposite sides from the point the edge enters on must not be walls:
+     * Given a one, if there are two incoming not-a-walls,
+     * the connecting edges to those not-a-walls must also not be walls
      * ·   ·   ·   ·
-     *             
-     * ·   · x ·   ·
+     *         x   
+     * ·   · x · x ·
      *       1 x    
-     * ·---·   ·   ·
+     * ·   ·   ·   ·
      *              
      * ·   ·   ·   ·
      */
-    export const IncomingOnes = register(function* IncomingOnes(state: State) {
+    export const NonWallsByOnes = register(function* NonWallsByOnes(state: State) {
         const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
             if (getGridElement(x, y) !== 3) return;
             // Incoming walls
@@ -816,36 +868,36 @@ export namespace Strategies {
             if ([
                 lookupEdge(Cardinal.south, x - 1, y - 1),
                 lookupEdge(Cardinal.east, x - 1, y - 1)
-            ].filter(e => getEdge(...e) === "wall").length === 1) {
-                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
             }
 
             // Upper right
             if ([
                 lookupEdge(Cardinal.south, x + 1, y - 1),
                 lookupEdge(Cardinal.west, x + 1, y - 1)
-            ].filter(e => getEdge(...e) === "wall").length === 1) {
-                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
+                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
             }
 
             // Lower left
             if ([
                 lookupEdge(Cardinal.north, x - 1, y + 1),
                 lookupEdge(Cardinal.east, x - 1, y + 1)
-            ].filter(e => getEdge(...e) === "wall").length === 1) {
-                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
             }
 
             // Lower right
             if ([
                 lookupEdge(Cardinal.north, x + 1, y + 1),
                 lookupEdge(Cardinal.west, x + 1, y + 1)
-            ].filter(e => getEdge(...e) === "wall").length === 1) {
-                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
+            ].filter(e => getEdge(...e) === "notwall").length === 2) {
+                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
+                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
             }
         });
         if (next) yield next;
@@ -901,6 +953,8 @@ export namespace Strategies {
      */
     export const FollowedEdges = register(function* FollowedEdges(state: State) {
         let changed: State | undefined = undefined;
+        handleDirection(Cardinal.west, "row", 0, 0);
+        handleDirection(Cardinal.north, "column", 0, 0);
         for (const kind of ["row", "column"] as RowColumn[]) {
             for (let x = 0; x < state.edges[kind].length; x++) {
                 for (let y = 0; y< state.edges[kind][x].length; y++) {
