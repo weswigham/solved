@@ -4,6 +4,7 @@ import {Slitherlink} from "../";
 
 describe("a slitherlink solver", () => {
     it("should be able to parse and solve an easy slitherlink puzzle", () => {
+        debugger;
         const initial = Slitherlink.newState([
             [ , , , ,0,2, , , , ,],
             [2,3,0, , , , ,2,2,3,],
@@ -19,8 +20,7 @@ describe("a slitherlink solver", () => {
         const solver = new Slitherlink.Solver();
         const gen = solver.solutions(initial);
         const first = gen.next().value;
-        const second = gen.next().value;
         expect(first).to.not.be.undefined;
-        expect(second).to.be.undefined;
+        solver.display(first);
     });
 });

@@ -305,32 +305,42 @@ export class Solver extends StrategicAbstractSolver<State> {
     display(state: State) {
         for (let y = 0; y < state.grid[0].length; y++) {
             // Draw line of dots/walls/constraints Above
-            const top = state.edges.row.map(column => column[y]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot);
+            const top = dot + state.edges.row.map(column => column[y]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot) + dot;
             console.log(top);
             let gridrow = "";
             for (let x = 0; x < state.grid.length; x++) {
                 const left = getEdge(state, ...lookupEdge(state, Cardinal.west, x, y));
-                const num = state.grid[x][y];
-                gridrow += (left === "wall" ? "|" : left === "notwall" ? "x" : " ") + num;
+                const num = state.grid[x][y] !== undefined ? state.grid[x][y] : " ";
+                gridrow += (left === "wall" ? "|" : (left === "notwall" ? "x" : " ")) + ` ${num} `;
             }
-            const right = getEdge(state, ...lookupEdge(state, Cardinal.east, state.grid.length, y));
-            gridrow += right;
+            const right = getEdge(state, ...lookupEdge(state, Cardinal.east, state.grid.length - 1, y));
+            gridrow += (right === "wall" ? "|" : (right === "notwall" ? "x" : " "));
             console.log(gridrow);
         }
-        const bottom = state.edges.row.map(column => column[state.grid[0].length]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot);
+        const bottom = dot + state.edges.row.map(column => column[state.grid[0].length]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot) + dot;
         console.log(bottom);
         if (state.lastStrategyApplied) console.log(`Used strategy ${state.lastStrategyApplied}.`);
     }
 }
 
 function cloneState(state: State): State {
-    return {
-        grid: state.grid.map(c => [...c]),
-        edges: {
-            row: state.edges.row.map(r => [...r]),
-            column: state.edges.column.map(c => [...c])
+    // WARING: Don't use `map` as it doesn't map holes in arrays
+    const width = state.grid.length;
+    const height = state.grid[0].length;
+    const newState: State = {grid: Array2D<number>(width, height), edges: {row: Array2D<EdgeState>(width, height + 1), column: Array2D<EdgeState>(width + 1, height)}};
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            newState.grid[x][y] = state.grid[x][y];
         }
-    };
+    }
+    for (const kind of ([RowColumn.row, RowColumn.column] as RowColumn[])) {
+        for (let x = 0; x < state.edges[kind].length; x++) {
+            for (let y = 0; y < state.edges[kind][x].length; y++) {
+                newState.edges[kind][x][y] = state.edges[kind][x][y];
+            }
+        }
+    }
+    return state;
 }
 
 
@@ -380,6 +390,7 @@ export namespace Strategies {
         return changed;
 
         function getGridElement(x: number, y: number) {
+            if (x < 0 || y < 0 || x >= state.grid.length || y >= state.grid[x].length) return undefined;
             return (changed || state).grid[x][y];
         }
 
@@ -670,7 +681,11 @@ export namespace Strategies {
 
 
 function Array2D<T>(width: number, height: number): T[][] {
-    return new Array(width).map(e => new Array(height));
+    const a = new Array(width)
+    for (let i = 0; i < width; i++) {
+        a[i] = new Array(height);
+    }
+    return a;
 }
 
 /**
