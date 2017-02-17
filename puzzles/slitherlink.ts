@@ -119,7 +119,6 @@ export class Solver extends StrategicAbstractSolver<State> {
         else {
             super(...strategies);
         }
-        this.printStates = true;
     }
     isSolution(state: State): boolean {
         // All number constraints must be satisfied
