@@ -927,48 +927,6 @@ export namespace Strategies {
         if (next) yield next;
     });
 
-
-    /**
-     * Given this pattern:
-     *    x
-     *  x . .
-     *     1
-     * This must follow:
-     *    x
-     *  x .x.
-     *    x1
-     * This can be applied to all corners of a 1.
-     */
-    export const OnesByNonWalls = register(function* OnesByNonWalls(state: State) {
-        const next = forEachGridSquare(state, (x, y, getGridElement, lookupEdge, getEdge, setEdge) => {
-            if (getGridElement(x, y) !== 1) return;
-            // Upper left corner
-            if (getEdge(...lookupEdge(Cardinal.south, x - 1, y - 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.east, x - 1, y - 1)) === "notwall") {
-                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
-            }
-
-            // Upper right corner
-            if (getEdge(...lookupEdge(Cardinal.south, x + 1, y - 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.west, x + 1, y - 1)) === "notwall") {
-                setEdge("notwall", ...lookupEdge(Cardinal.north, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
-            }
-
-            // Lower left corner
-            if (getEdge(...lookupEdge(Cardinal.north, x - 1, y + 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.east, x - 1, y + 1)) === "notwall") {
-                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.west, x, y));
-            }
-
-            // Lower right corner
-            if (getEdge(...lookupEdge(Cardinal.north, x + 1, y + 1)) === "notwall" && getEdge(...lookupEdge(Cardinal.west, x + 1, y + 1)) === "notwall") {
-                setEdge("notwall", ...lookupEdge(Cardinal.south, x, y));
-                setEdge("notwall", ...lookupEdge(Cardinal.east, x, y));
-            }
-        });
-        if (next) yield next;
-    });
-
     /**
      * For all existing edges:
      *  - If a point has three not-a-wall going into it, the last edge going into the point must not be a wall

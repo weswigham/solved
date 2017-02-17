@@ -44,4 +44,83 @@ A [Slitherlink](http://www.nikoli.co.jp/en/puzzles/slitherlink.html) solver whic
 * GuessBlank
     * Enumerates all completely unconstrained potential wall places. Literally only possible when a puzzle only has zeros for constraints.
 
-Much credit to @mooman219 for helping me dream up and verify some of the more interesting strategies here!
+Much credit to [@mooman219](https://github.com/mooman219) for helping me dream up and verify some of the more interesting strategies here!
+
+API
+===
+While not packaged as a library, if included by a script, this package does provide a well-defined and typed public API. The top level members are the following:
+* RainRadar
+    * Namespace containing a RainRadar Solver and related types
+* Slitherlink
+    * Namespace containing a Slitherlink Solver, related types, and a Strategies namespace containing all strategies which have been implemented. The solver accepts a list of strategies as optional arguments if you wish to limit what it solves with (useful for verifying if a puzzle can only be solved using simple inductions!)
+
+Writing Your Own
+================
+Solvers
+-------
+
+`./solver/index.ts` contains abstract base classes for both a generic backtracking solver and a solver which specifically attempts to utilize various strategies. Simply inherit from one of these and implement the required members.
+I keep mine in the `./puzzles` subdirectory, and reexport the solvers and their associated types and machinery under a namespace via the `index.ts`.
+
+
+Tests
+-----
+
+I use [`mocha`](https://www.npmjs.com/package/mocha) as a test runner alongside [`chai`](https://www.npmjs.com/package/chai) as an assertion library. I used exclusively expectation-style assertions within BDD-style `describe`/`it` blocks.
+Adding a new test is accomplished simply by dropping a new `.ts` or `.js` file into the `./test` subdirectory. By my own convention, files are named `[puzzle].test.ts`, and test the named puzzle exclusively.
+
+
+Scripts
+-------
+
+This repository is not packaged for individual resale - the solvers are not transpiled by a build step and are not immediately distributable as a library.
+It is easiest to work with them (to, for example, actually solve a puzzle with one) by writing a short `.ts` file in the scripts folder which does what you
+want (since different puzzles have different state construction requirements), which you then run with [`ts-node`](https://www.npmjs.com/package/ts-node).
+For example, if I wanted to solve this simple slitherlink puzzle:
+```
+     ·   ·   ·   ·
+       1   3   2     
+     ·   ·   ·   ·
+       0       2 
+     ·   ·   ·   ·
+       1   3   2 
+     ·   ·   ·   ·
+```
+Failing adding it to the permanent tests in the `./test` dir, I would write the following out to a `./scripts/slither-1.ts`:
+```ts
+import {Slitherlink} from "../";
+const initial = Slitherlink.newState([
+    [1,3,2,],
+    [0, ,2,],
+    [1,3,2,],
+]);
+const solver = new Slitherlink.Solver();
+console.log("Initial:");
+solver.display(initial);
+console.log("");
+const gen = solver.solutions(initial);
+const first = gen.next().value;
+solver.display(first);
+```
+and execute it with `ts-node ./scripts/slither-1.ts` to see the result.
+Having the entire library available to you also allows you do do nice things like check for more than one solution:
+```ts
+import {Slitherlink} from "../";
+const initial = Slitherlink.newState([
+    [1,3,2,],
+    [0, ,2,],
+    [1,3,2,],
+]);
+const solver = new Slitherlink.Solver();
+const gen = solver.solutions(initial);
+const first = gen.next().value;
+const second = gen.next().value;
+if (!first) {
+    console.error("No solution!");
+} else if (second) {
+    console.error("More than one solution!");
+} else {
+    solver.display(first);
+}
+```
+Or, as is done in the provided rain radar script, search for a puzzle fitting certain constraints.
