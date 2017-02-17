@@ -109,6 +109,146 @@ function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: num
     return state.edges[kind][x][y] = es;
 }
 
+function sameEdge(a: [RowColumn, number, number], b: [RowColumn, number, number]) {
+    if (!a || !b) return false;
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+}
+
+function traceLoop(state: State, startingEdge: [RowColumn, number, number], totalEdges: number, onEdge?: (edge: [RowColumn, number, number]) => boolean, log?: boolean) {
+    let startPainted = 0;
+    let followed = 0;
+
+    // If we follow a row, then follow it out the side we didn't come from
+    const follow = (to: [RowColumn, number, number], from: [RowColumn, number, number]): boolean => {
+        if (sameEdge(startingEdge, to)) {
+            startPainted++;
+            if (startPainted > 1) {
+                return true;
+            }
+        }
+        if (onEdge) {
+            if (onEdge(to) === false) {
+                return false;
+            }
+        }
+        followed++;
+        if ((followed - 1) > totalEdges) { // -1 since we hit the start twice
+            throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
+        }
+
+        const setOne = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.west : Cardinal.north)];
+        const setTwo = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.east : Cardinal.south)];
+        const activeSet = setOne.find(e => sameEdge(e, from)) ? setTwo : setOne;
+        const walls = activeSet.filter(e => getEdge(state, ...e) === "wall");
+        if (walls.length !== 1) {
+            if (log) console.log(`Found ${walls.length} edges from edge (${to[0]}, ${to[1]}, ${to[2]}) but expected 1 - not a solution`);
+            return false;
+        }
+        return follow(walls[0], to);
+    };
+    if (follow(startingEdge, undefined)) {
+        return followed;
+    }
+    return false;
+}
+
+function isInvalid(state: State, startingEdge: [RowColumn, number, number] = undefined, log = false) {
+    // All number constraints must not be exceeded
+    for (let x = 0; x < state.grid.length; x++) {
+        for (let y = 0; y < state.grid[0].length; y++) {
+            const count = state.grid[x][y];
+            if (typeof count === "number") {
+                const edges = directions.map(d => lookupEdge(state, d, x, y));
+                const walls = edges.reduce((acc, val) => (getEdge(state, ...val) === "wall" ? 1 : 0) + acc, 0);
+                // Exceeded a constraint? invalid.
+                if (walls > count) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // If a point is "full", it must have exactly 4 non-undefined elements, and there must be zero or two walls.
+     for (const kind of ["row", "column"] as RowColumn[]) {
+        for (let x = 0; x < state.edges[kind].length; x++) {
+            for (let y = 0; y < state.edges[kind][x].length; y++) {
+                if (handleDirection(kind === "row" ? Cardinal.east : Cardinal.south, kind, x, y)) {
+                    return true;
+                }
+            }
+        }
+     }
+
+    function handleDirection(dir: Cardinal, kind: RowColumn, x: number, y: number) {
+        const connectedEdges = [[kind, x, y], ...connectingEdges(state, kind, x, y, dir)];
+        const wallCount = connectedEdges.reduce((acc, val) => (getEdge(state, ...val) === "wall" ? 1 : 0) + acc, 0);
+        const nonWallCount = connectedEdges.reduce((acc, val) => (getEdge(state, ...val) === "notwall" ? 1 : 0) + acc, 0);
+        if (wallCount > 2) {
+            return true;
+        }
+        if (wallCount === 1 && nonWallCount === 3) {
+            return true;
+        }
+    }
+
+    // Count edges before we walk a loop - if the loop we walk has fewwer edges than this, then
+    // there must be multiple loops or edge chains.
+    let totalEdges = 0;
+    for (const type of (["row", "column"] as RowColumn[])) {
+        for (let x = 0; x < state.edges[type].length; x++) {
+            for (let y = 0; y < state.edges[type][x].length; y++) {
+                if (state.edges[type][x][y] === "wall") {
+                    totalEdges++;
+                }
+            }
+        }
+    }
+
+    if (startingEdge) {
+        // Only verify changes resulting from the given edge
+        const looped = traceLoop(state, startingEdge, totalEdges, undefined, log);
+        if (looped && looped < totalEdges) {
+            return true;
+        }
+        return false;
+    }
+
+    let paintedEdges = {
+        row: Array2D<boolean>(state.edges.row.length, state.edges.row[0].length),
+        column: Array2D<boolean>(state.edges.column.length, state.edges.column[0].length)
+    };
+    let paintCount = 0;
+    do {
+        outermost: for (const type of (["row", "column"] as RowColumn[])) {
+            for (let x = 0; x < state.edges[type].length; x++) {
+                for (let y = 0; y < state.edges[type][x].length; y++) {
+                    if (state.edges[type][x][y] === "wall") {
+                        if (!paintedEdges[type][x][y]) {
+                            startingEdge = [type, x, y];
+                            break outermost;
+                        }
+                    }
+                }
+            }
+        }
+
+        // No starting edge? potentially valid.
+        if (!startingEdge) {
+            return false;
+        }
+
+        const looped = traceLoop(state, startingEdge, totalEdges, edge => {
+            if (paintedEdges[edge[0]][edge[1]][edge[2]]) return false;
+            paintedEdges[edge[0]][edge[1]][edge[2]] = true;
+            paintCount++;
+        }, log);
+        if (looped && looped < totalEdges) {
+            return true;
+        }
+    } while (paintCount < totalEdges);
+    return false;
+}
+
 const dot = "·";
 
 export class Solver extends StrategicAbstractSolver<State> {
@@ -118,6 +258,9 @@ export class Solver extends StrategicAbstractSolver<State> {
         }
         else {
             super(...strategies);
+        }
+        this.isInvalid = function(state: State): boolean {
+            return isInvalid(state, undefined, this.printStates);
         }
     }
     isSolution(state: State): boolean {
@@ -162,47 +305,15 @@ export class Solver extends StrategicAbstractSolver<State> {
             return false;
         }
 
-        let startPainted = 0;
-        let followed = 0;
-
-        function sameEdge(a: [RowColumn, number, number], b: [RowColumn, number, number]) {
-            if (!a || !b) return false;
-            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-        }
-
-        // If we follow a row, then follow it out the side we didn't come from
-        const follow = (to: [RowColumn, number, number], from: [RowColumn, number, number]): boolean => {
-            if (sameEdge(startingEdge, to)) {
-                startPainted++;
-                if (startPainted > 1) {
-                    return true;
-                }
-            }
-            followed++;
-            if ((followed - 1) > totalEdges) { // -1 since we hit the start twice
-                throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
-            }
-
-            const setOne = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.west : Cardinal.north)];
-            const setTwo = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? Cardinal.east : Cardinal.south)];
-            const activeSet = setOne.find(e => sameEdge(e, from)) ? setTwo : setOne;
-            const walls = activeSet.filter(e => getEdge(state, ...e) === "wall");
-            if (walls.length !== 1) {
-                if (this.printStates) console.log(`Found ${walls.length} edges from edge (${to[0]}, ${to[1]}, ${to[2]}) but expected 1 - not a solution`);
-                return false;
-            }
-            return follow(walls[0], to);
-        };
-
-        const looped = follow(startingEdge, undefined);
+        const looped = traceLoop(state, startingEdge, totalEdges, undefined, this.printStates);
         if (!looped) {
             return false; // Traversed a nonloop - must be a loop
         }
-        if (followed > totalEdges) {
+        if (looped > totalEdges) {
             throw new Error("Somehow followed a valid loop across more edges than the graph had!");
         }
-        if (this.printStates) console.log(`Followed around ${followed} out of ${totalEdges} edges`);
-        return followed === totalEdges;
+        if (this.printStates) console.log(`Followed around ${looped} out of ${totalEdges} edges`);
+        return looped === totalEdges;
     }
     display(state: State) {
         for (let y = 0; y < state.grid[0].length; y++) {
@@ -300,29 +411,35 @@ export namespace Strategies {
             return lookupEdge(changed || state, dir, x, y);
         }
 
-        function getEdgeInternal(...tuple: (RowColumn | number)[]): EdgeState {
-            return getEdge(changed || state, ...tuple);
+        function getEdgeInternal(kind: RowColumn, x: number, y: number): EdgeState;
+        function getEdgeInternal(...tuple: (RowColumn | number)[]): EdgeState;
+        function getEdgeInternal(kind: RowColumn, x: number, y: number): EdgeState {
+            return getEdge(changed || state, kind, x, y);
         }
 
-        function setEdgeInternal(es: EdgeState, ...tuple: (RowColumn | number)[]): EdgeState {
-            if (!changed && getEdge(state, ...tuple) !== es) changed = cloneState(state);
-            const cur = getEdge(changed || state, ...tuple);
+        function setEdgeInternal(es: EdgeState, kind: RowColumn, x: number, y: number): EdgeState {
+            if (!changed && getEdge(state, kind, x, y) !== es) changed = cloneState(state);
+            const cur = getEdge(changed || state, kind, x, y);
             if (cur === es) return es;
             if (cur !== undefined && cur !== es) {
                 violation = true;
                 return;
             }
-            const val = setEdge(es, changed || state, ...tuple);
+            const val = setEdge(es, changed || state, kind, x, y);
 
             // Validate numeric constraints adjacent to the placed edge (save loop checking for elsewhere)
-            for (const [x, y] of affectingGridSquares(changed || state, ...tuple)) {
-                const num = getGridElement(x, y);
+            for (const [x1, y1] of affectingGridSquares(changed || state, kind, x, y)) {
+                const num = getGridElement(x1, y1);
                 if (num === undefined) continue;
-                let found = directions.map(d => getEdgeInternal(...lookupEdgeInternal(d as Cardinal, x, y))).filter(k => k === "wall").length;
+                let found = directions.map(d => getEdgeInternal(...lookupEdgeInternal(d, x1, y1))).filter(k => k === "wall").length;
                 if (found > num) {
                     violation = true;
                     break;
                 }
+            }
+
+            if (isInvalid(changed || state, [kind, x, y])) {
+                violation = true;
             }
 
             return val;
@@ -932,7 +1049,7 @@ export namespace Strategies {
     export const GuessConstrained = register(function* GuessConstrained(state: State) {
         let changed: State | undefined = undefined;
         for (let x = 0; x < state.grid.length; x++) {
-            for (let y = 0; y < state.grid.length; y++) {
+            for (let y = 0; y < state.grid[x].length; y++) {
                 if (state.grid[x][y] === undefined) continue;
                 // TODO: Only need to lookup North and West edges for all squares except the lower rightmost one - this is duplicating guesses
                 for (const dir of directions) {

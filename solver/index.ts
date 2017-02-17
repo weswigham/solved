@@ -6,6 +6,10 @@ export abstract class AbstractSolver<TState> {
         if (this.printStates && this.display) {
             console.log(`State number ${this.statesExplored}`);
             this.display(initial);
+            debugger;
+        }
+        if (this.isInvalid && this.isInvalid(initial)) {
+            return;
         }
         if (this.isSolution(initial)) {
             if (this.printStates) console.log(`State number ${this.statesExplored} is a solution.`);
@@ -17,6 +21,7 @@ export abstract class AbstractSolver<TState> {
     }
     abstract enumerateNext(state: TState): IterableIterator<TState>;
     abstract isSolution(state: TState): boolean;
+    isInvalid?: (state: TState) => boolean; // Useful for early bails when an entire tree of options goes bad
     abstract display?(state: TState): void;
 }
 
