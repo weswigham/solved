@@ -332,7 +332,7 @@ export class Solver extends StrategicAbstractSolver<State> {
         }
         const bottom = dot + state.edges.row.map(column => column[state.grid[0].length]).map(edge => edge === "wall" ? "---" : edge === "notwall" ? " x " : "   ").join(dot) + dot;
         console.log(bottom);
-        if (state.lastStrategyApplied) console.log(`Used strategy ${state.lastStrategyApplied}.`);
+        if (state.lastStrategyApplied) console.log(`Last used strategy: ${state.lastStrategyApplied}.`);
     }
 }
 

@@ -4,8 +4,8 @@
   "description": "A puzzle solver in TypeScript",
   "main": "index.ts",
   "scripts": {
-    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register",
-    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --debug"
+    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
+    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug"
   },
   "repository": {
     "type": "git",
