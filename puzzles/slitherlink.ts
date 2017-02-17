@@ -201,7 +201,7 @@ export class Solver extends StrategicAbstractSolver<State> {
         if (followed > totalEdges) {
             throw new Error("Somehow followed a valid loop across more edges than the graph had!");
         }
-        console.log(`Followed around ${followed} out of ${totalEdges} edges`);
+        if (this.printStates) console.log(`Followed around ${followed} out of ${totalEdges} edges`);
         return followed === totalEdges;
     }
     display(state: State) {
