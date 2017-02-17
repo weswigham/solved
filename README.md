@@ -8,9 +8,10 @@ Then, run `npm test` in this directory with a node version between 6 and [6.4](h
 
 What's Included
 ===============
-A Rain Radar solver (and [sample puzzle generation script](https://github.com/weswigham/solved/blob/master/scripts/generate*rain*radar.ts)) * this solver is mostly brute force with a few simple heuristics such as not bothing with placements which would bring a constraint to 1.
+A Rain Radar solver (and [sample puzzle generation script](https://github.com/weswigham/solved/blob/master/scripts/generate*rain*radar.ts))
+* This solver is mostly brute force with a few simple heuristics such as not bothering with placements which would bring a constraint to 1.
 
-A Slitherlink solver which utilizes the following strategies:
+A [Slitherlink](http://www.nikoli.co.jp/en/puzzles/slitherlink.html) solver which utilizes the following strategies:
 * ConstainZero
     * Marks all sides of a zero as not a wall
 * ConstrainThree
@@ -42,3 +43,5 @@ A Slitherlink solver which utilizes the following strategies:
     * Enumerates all potential walls alongside an existing constraint. Unlikely but theoretically possible to be used to guess a puzzle start.
 * GuessBlank
     * Enumerates all completely unconstrained potential wall places. Literally only possible when a puzzle only has zeros for constraints.
+
+Much credit to @mooman219 for helping me dream up and verify some of the more interesting strategies here!
