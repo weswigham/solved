@@ -1,5 +1,7 @@
-# [solved](https://github.com/weswigham/solved) [![Build Status](https://travis*ci.org/weswigham/solved.svg?branch=master)](https://travis*ci.org/weswigham/solved)
-A puzzle solver in TypeScript
+# solved
+[A puzzle solver in TypeScript](https://github.com/weswigham/solved)
+
+[![Build Status](https://travis-ci.org/weswigham/solved.svg?branch=master)](https://travis*ci.org/weswigham/solved)
 
 Usage
 =====
