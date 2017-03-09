@@ -38,3 +38,6 @@ jspm_packages
 
 # vscode workspace
 .vscode
+
+# dist dir
+dist
