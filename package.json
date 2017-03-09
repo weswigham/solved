@@ -6,7 +6,8 @@
   "types": "dist/solved.d.ts",
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
-    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug"
+    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug",
+    "precommit": "tsc && npm test && git add ./dist -f"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "@types/mocha": "^2.2.38",
     "@types/node": "^7.0.4",
     "chai": "^3.5.0",
+    "git-pre-commit": "^2.1.3",
     "mocha": "^3.2.0",
     "ts-node": "^2.0.0",
     "typescript": "^2.2.1"
