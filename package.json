@@ -2,7 +2,8 @@
   "name": "solved",
   "version": "1.0.0",
   "description": "A puzzle solver in TypeScript",
-  "main": "index.ts",
+  "main": "dist/solved.js",
+  "types": "dist/solved.d.ts",
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
     "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug"
@@ -29,6 +30,6 @@
     "chai": "^3.5.0",
     "mocha": "^3.2.0",
     "ts-node": "^2.0.0",
-    "typescript": "^2.1.5"
+    "typescript": "^2.2.1"
   }
 }
