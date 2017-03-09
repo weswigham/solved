@@ -7,7 +7,7 @@
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
     "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug",
-    "precommit": "tsc && npm test && git add ./dist -f"
+    "precommit": "tsc && git add ./dist -f"
   },
   "repository": {
     "type": "git",
