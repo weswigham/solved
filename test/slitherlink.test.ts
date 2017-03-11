@@ -1,6 +1,6 @@
 /// <reference types="mocha" />
 import {expect} from "chai";
-import {Slitherlink} from "../";
+import {Slitherlink} from "../puzzles";
 
 // TODO: Verify solutions programattically rather than by reviewing output
 describe("a slitherlink solver", () => {

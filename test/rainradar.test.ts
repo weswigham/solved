@@ -1,6 +1,6 @@
 /// <reference types="mocha" />
 import {expect} from "chai";
-import {RainRadar} from "../";
+import {RainRadar} from "../puzzles";
 
 describe("a rainradar solver", () => {
     it("should be able to solve a simple rainradar puzzle", () => {

@@ -24,7 +24,10 @@ export declare namespace Strategies {
     /**
      * Returns an array of all registered strategies in registration order
      */
-    function all(): Strategy<State>[];
+    function all(): {
+        strategy: Strategy<State>;
+        name: string;
+    }[];
     /**
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */

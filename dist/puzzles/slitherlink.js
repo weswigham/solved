@@ -220,7 +220,7 @@ const dot = "·";
 class Solver extends solver_1.StrategicAbstractSolver {
     constructor(...strategies) {
         if (strategies.length === 0) {
-            super(...Strategies.all());
+            super(...Strategies.all().map(s => s.strategy));
         }
         else {
             super(...strategies);
@@ -336,7 +336,7 @@ var Strategies;
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     function register(strat) {
-        _all.push(solver_1.strategy(strat));
+        _all.push({ strategy: solver_1.strategy(strat), name: strat.name });
         return strat;
     }
     Strategies.register = register;

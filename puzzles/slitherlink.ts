@@ -254,7 +254,7 @@ const dot = "·";
 export class Solver extends StrategicAbstractSolver<State> {
     constructor(...strategies: Strategy<State>[]) {
         if (strategies.length === 0) {
-            super(...Strategies.all());
+            super(...Strategies.all().map(s => s.strategy));
         }
         else {
             super(...strategies);
@@ -358,11 +358,11 @@ function cloneState(state: State): State {
 
 
 export namespace Strategies {
-    const _all: Strategy<State>[] = [];
+    const _all: {strategy: Strategy<State>, name: string}[] = [];
     /**
      * Returns an array of all registered strategies in registration order
      */
-    export function all(): Strategy<State>[] {
+    export function all(): {strategy: Strategy<State>, name: string}[] {
         return _all;
     }
 
@@ -370,7 +370,7 @@ export namespace Strategies {
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     export function register(strat: Strategy<State>): Strategy<State> {
-        _all.push(strategy(strat));
+        _all.push({strategy: strategy(strat), name: strat.name});
         return strat;
     }
 

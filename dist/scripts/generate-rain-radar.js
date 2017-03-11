@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const solved = require("../");
+const solved = require("../puzzles");
 const clouds = [
     { ul: { x: 1, y: 1 }, lr: { x: 3, y: 2 } },
     { ul: { x: 5, y: 0 }, lr: { x: 6, y: 3 } },

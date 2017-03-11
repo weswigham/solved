@@ -1,4 +1,4 @@
-import solved = require("../");
+import solved = require("../puzzles");
 
 const clouds: solved.RainRadar.Cloud[] = [
     { ul: { x: 1, y: 1 }, lr: { x: 3, y: 2 } },
