@@ -2,8 +2,8 @@
   "name": "solved",
   "version": "1.0.0",
   "description": "A puzzle solver in TypeScript",
-  "main": "dist/solved.js",
-  "types": "dist/solved.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
     "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug",
