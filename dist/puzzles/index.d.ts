@@ -1,3 +1,4 @@
 import * as RainRadar from "./rainradar";
 import * as Slitherlink from "./slitherlink";
-export { RainRadar, Slitherlink };
+import * as Crossword from "./crossword";
+export { RainRadar, Slitherlink, Crossword };

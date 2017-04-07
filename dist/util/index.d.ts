@@ -12,3 +12,4 @@ export declare const Cardinal: {
     south: "south";
     west: "west";
 };
+export declare function shuffle<T>(a: T[]): void;
