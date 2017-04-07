@@ -35,6 +35,7 @@ export declare class Solver extends AbstractSolver<State> {
     display(s: State): void;
     private fillState(s, ref, option);
     enumerateNext(s: State): IterableIterator<State>;
+    private checkState(s);
     isSolution(s: State): boolean;
     private generateAcross(values);
     private generateDown(across, values);

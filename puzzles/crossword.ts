@@ -26,7 +26,9 @@ export class BasicDictionary implements Dictionary {
     private storedSearches: {[index: string]: RegExp} = {};
     private storedResults: {[index: string]: string[]} = {};
     private cachedKeys: string[] = [];
-    constructor(private dict: string, private cacheSize = 200) {}
+    constructor(private dict: string, private cacheSize = 200) {
+        dict = dict.replace(/\W/ig, ""); // Prune all punctuation
+    }
     private get(pattern: string): RegExp {
         return this.storedSearches[pattern] || (this.storedSearches[pattern] = new RegExp(`\\b${pattern.replace(/\?/g, ".")}\\b`, "ig"));
     }
@@ -90,21 +92,31 @@ export class Solver extends AbstractSolver<State> {
         const sorted = unfinished.sort((a, b) => {
             return this.dict.count(a.pattern) - this.dict.count(b.pattern);
         });
-        for (const ref of sorted) {
-            const state = s;
-            const unfiltered = this.dict.grep(ref.pattern);
-            const options = unfiltered.filter(w => !(presentWords[w.toUpperCase()]));
-            if (!options.length) {
-                // If any word has no options, then there is no solution at this point
-                return;
-            }
-            if (this.randomize) {
-                shuffle(options);
-            }
-            for (const option of options) {
-                yield this.fillState(state.values, ref, option);
-            }
+        const ref = sorted[0];
+        const unfiltered = this.dict.grep(ref.pattern);
+        const options = unfiltered.filter(w => !(presentWords[w.toUpperCase()]));
+        if (!options.length) {
+            // If any word has no options, then there is no solution at this point
+            return;
         }
+        if (this.randomize) {
+            shuffle(options);
+        }
+        for (const option of options) {
+            const potential = this.fillState(s.values, ref, option);
+            if (this.checkState(potential)) yield potential;
+        }
+    }
+    private checkState(s: State) {
+        // This is piles more work than is required.
+        // Check that all completed words are in the dictionary
+        const across = this.generateAcross(s.values);
+        const down = this.generateDown(across, s.values);
+        const combined = [...across, ...down].filter(f => f.pattern.indexOf("?") === -1);
+        for (const complete of combined) {
+            if (!(this.dict.grep(complete.pattern)).length) return false;
+        }
+        return true;
     }
     isSolution(s: State) {
         for (let i = 0; i < s.values.length; i++) {
