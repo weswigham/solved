@@ -9,7 +9,7 @@ class BasicDictionary {
         this.storedSearches = {};
         this.storedResults = {};
         this.cachedKeys = [];
-        dict = dict.replace(/[^a-z0-9]/ig, ""); // Prune all punctuation?
+        dict = dict.replace(/[^a-zA-Z0-9]/igm, ""); // Prune all punctuation?
     }
     get(pattern) {
         return this.storedSearches[pattern] || (this.storedSearches[pattern] = new RegExp(`\\b${pattern.replace(/\?/g, ".")}\\b`, "ig"));
