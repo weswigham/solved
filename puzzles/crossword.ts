@@ -27,7 +27,7 @@ export class BasicDictionary implements Dictionary {
     private storedResults: {[index: string]: string[]} = {};
     private cachedKeys: string[] = [];
     constructor(private dict: string, private cacheSize = 200) {
-        this.dict = dict.replace(/[^a-zA-Z0-9]/igm, ""); // Prune all punctuation?
+        this.dict = dict.replace(/[^a-z0-9\n]/igm, ""); // Prune all punctuation?
     }
     private get(pattern: string): RegExp {
         return this.storedSearches[pattern] || (this.storedSearches[pattern] = new RegExp(`\\b${pattern.replace(/\?/g, ".")}\\b`, "ig"));
