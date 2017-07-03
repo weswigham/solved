@@ -183,8 +183,8 @@ function isInvalid(state, startingEdge = undefined, log = false) {
         return false;
     }
     let paintedEdges = {
-        row: Array2D(state.edges.row.length, state.edges.row[0].length),
-        column: Array2D(state.edges.column.length, state.edges.column[0].length)
+        row: util_1.Array2D(state.edges.row.length, state.edges.row[0].length),
+        column: util_1.Array2D(state.edges.column.length, state.edges.column[0].length)
     };
     let paintCount = 0;
     do {
@@ -307,7 +307,7 @@ function cloneState(state) {
     // WARING: Don't use `map` as it doesn't map holes in arrays
     const width = state.grid.length;
     const height = state.grid[0].length;
-    const newState = { grid: Array2D(width, height), edges: { row: Array2D(width, height + 1), column: Array2D(width + 1, height) } };
+    const newState = { grid: util_1.Array2D(width, height), edges: { row: util_1.Array2D(width, height + 1), column: util_1.Array2D(width + 1, height) } };
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             newState.grid[x][y] = state.grid[x][y];
@@ -973,13 +973,6 @@ var Strategies;
         }
     });
 })(Strategies = exports.Strategies || (exports.Strategies = {}));
-function Array2D(width, height) {
-    const a = new Array(width);
-    for (let i = 0; i < width; i++) {
-        a[i] = new Array(height);
-    }
-    return a;
-}
 /**
  * Call like so:
  * (sample problem 1 from http://www.nikoli.com/en/puzzles/slitherlink/)
@@ -999,7 +992,7 @@ function Array2D(width, height) {
 function newState(input) {
     const width = input[0].length;
     const height = input.length;
-    const state = { grid: Array2D(width, height), edges: { row: Array2D(width, height + 1), column: Array2D(width + 1, height) } };
+    const state = { grid: util_1.Array2D(width, height), edges: { row: util_1.Array2D(width, height + 1), column: util_1.Array2D(width + 1, height) } };
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             state.grid[x][y] = input[y][x];

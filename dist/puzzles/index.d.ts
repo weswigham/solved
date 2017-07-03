@@ -1,4 +1,5 @@
 import * as RainRadar from "./rainradar";
 import * as Slitherlink from "./slitherlink";
 import * as Crossword from "./crossword";
-export { RainRadar, Slitherlink, Crossword };
+import * as XsAndOs from "./xsnos";
+export { RainRadar, Slitherlink, Crossword, XsAndOs };

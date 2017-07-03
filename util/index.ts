@@ -20,3 +20,11 @@ export function shuffle<T>(a: T[]) {
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
 }
+
+export function Array2D<T>(width: number, height: number): T[][] {
+    const a = new Array(width)
+    for (let i = 0; i < width; i++) {
+        a[i] = new Array(height);
+    }
+    return a;
+}

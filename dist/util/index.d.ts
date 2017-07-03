@@ -13,3 +13,4 @@ export declare const Cardinal: {
     west: "west";
 };
 export declare function shuffle<T>(a: T[]): void;
+export declare function Array2D<T>(width: number, height: number): T[][];

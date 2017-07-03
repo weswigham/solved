@@ -16,4 +16,12 @@ function shuffle(a) {
     }
 }
 exports.shuffle = shuffle;
+function Array2D(width, height) {
+    const a = new Array(width);
+    for (let i = 0; i < width; i++) {
+        a[i] = new Array(height);
+    }
+    return a;
+}
+exports.Array2D = Array2D;
 //# sourceMappingURL=index.js.map

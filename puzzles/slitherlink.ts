@@ -1,5 +1,5 @@
 import {Strategy, StrategicAbstractSolver, strategy, StrategicState} from "../solver";
-import {Cardinal, Enum} from "../util";
+import {Cardinal, Enum, Array2D} from "../util";
 
 export type EdgeState = "wall" | "notwall";
 export const EdgeState = Enum("wall", "notwall");
@@ -1045,15 +1045,6 @@ export namespace Strategies {
             }
         }
     });
-}
-
-
-function Array2D<T>(width: number, height: number): T[][] {
-    const a = new Array(width)
-    for (let i = 0; i < width; i++) {
-        a[i] = new Array(height);
-    }
-    return a;
 }
 
 /**
