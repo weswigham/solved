@@ -5,7 +5,7 @@ export interface Point2D {
 export declare function Enum<X extends string>(...x: X[]): {
     [K in X]: K;
 };
-export declare type Cardinal = "north" | "east" | "south" | "west";
+export type Cardinal = "north" | "east" | "south" | "west";
 export declare const Cardinal: {
     north: "north";
     east: "east";

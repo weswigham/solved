@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.StrategicAbstractSolver = exports.AbstractSolver = void 0;
+exports.strategy = strategy;
 class AbstractSolver {
     constructor(printStates = false) {
         this.printStates = printStates;
         this.statesExplored = 0;
+        this.bfs = false;
     }
     *solutions(initial) {
         this.statesExplored++;
@@ -19,8 +22,24 @@ class AbstractSolver {
                 console.log(`State number ${this.statesExplored} is a solution.`);
             return yield initial;
         }
-        for (const next of this.enumerateNext(initial)) {
-            yield* this.solutions(next);
+        if (this.bfs) {
+            const work = [this.enumerateNext(initial)];
+            while (work.length) {
+                const item = work.pop();
+                for (const next of item) {
+                    if (this.isSolution(next)) {
+                        yield next;
+                    }
+                    else {
+                        work.unshift(this.enumerateNext(next));
+                    }
+                }
+            }
+        }
+        else {
+            for (const next of this.enumerateNext(initial)) {
+                yield* this.solutions(next);
+            }
         }
     }
 }
@@ -35,7 +54,6 @@ function strategy(gen) {
         }
     };
 }
-exports.strategy = strategy;
 class StrategicAbstractSolver extends AbstractSolver {
     constructor(...strats) {
         super();

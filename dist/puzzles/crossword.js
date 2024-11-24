@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Solver = exports.BasicDictionary = void 0;
 const solver_1 = require("../solver");
 const util_1 = require("../util");
 class BasicDictionary {
@@ -85,7 +86,7 @@ class Solver extends solver_1.AbstractSolver {
             return;
         }
         if (this.randomize) {
-            util_1.shuffle(options);
+            (0, util_1.shuffle)(options);
         }
         for (const option of options) {
             const potential = this.fillState(s.values, ref, option);

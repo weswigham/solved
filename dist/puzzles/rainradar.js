@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Solver = void 0;
 const solver_1 = require("../solver");
 class Solver extends solver_1.AbstractSolver {
     display(state) {

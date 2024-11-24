@@ -1,6 +1,7 @@
 export declare abstract class AbstractSolver<TState> {
     protected printStates: boolean;
     private statesExplored;
+    protected bfs: boolean;
     constructor(printStates?: boolean);
     solutions(initial: TState): IterableIterator<TState>;
     abstract enumerateNext(state: TState): IterableIterator<TState>;

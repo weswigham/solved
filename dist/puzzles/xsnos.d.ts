@@ -1,10 +1,10 @@
 import { StrategicAbstractSolver, Strategy } from "../solver";
-export declare type CellState = "X" | "O" | undefined;
+export type CellState = "X" | "O" | undefined;
 export declare const CellState: {
     X: "X";
     O: "O";
 };
-export declare type State = CellState[][];
+export type State = CellState[][];
 export declare class Solver extends StrategicAbstractSolver<State> {
     constructor(...strategies: Strategy<State>[]);
     display(state: State): void;
@@ -22,5 +22,5 @@ export declare namespace Strategies {
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     function register(strat: Strategy<State>): Strategy<State>;
-    const PlaceNextLetter: Strategy<CellState[][]>;
+    const PlaceNextLetter: Strategy<State>;
 }

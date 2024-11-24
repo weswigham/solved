@@ -1,5 +1,5 @@
 import { AbstractSolver } from "../solver";
-export declare type GridElement = "." | "?" | string;
+export type GridElement = "." | "?" | string;
 export interface State {
     values: GridElement[][];
 }
@@ -23,8 +23,8 @@ export declare class BasicDictionary implements Dictionary {
     private storedResults;
     private cachedKeys;
     constructor(dict: string, cacheSize?: number);
-    private get(pattern);
-    private remember(pattern);
+    private get;
+    private remember;
     grep(pattern: string): string[];
     count(pattern: string): number;
 }
@@ -33,10 +33,10 @@ export declare class Solver extends AbstractSolver<State> {
     protected randomize: boolean;
     constructor(dict: Dictionary, randomize?: boolean, printStates?: boolean);
     display(s: State): void;
-    private fillState(s, ref, option);
+    private fillState;
     enumerateNext(s: State): IterableIterator<State>;
-    private checkState(s);
+    private checkState;
     isSolution(s: State): boolean;
-    private generateAcross(values);
-    private generateDown(across, values);
+    private generateAcross;
+    private generateDown;
 }

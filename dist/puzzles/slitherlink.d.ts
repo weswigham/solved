@@ -1,10 +1,10 @@
 import { Strategy, StrategicAbstractSolver, StrategicState } from "../solver";
-export declare type EdgeState = "wall" | "notwall";
+export type EdgeState = "wall" | "notwall";
 export declare const EdgeState: {
     wall: "wall";
     notwall: "notwall";
 };
-export declare type RowColumn = "row" | "column";
+export type RowColumn = "row" | "column";
 export declare const RowColumn: {
     row: "row";
     column: "column";

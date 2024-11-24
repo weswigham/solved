@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Strategies = exports.Solver = exports.CellState = void 0;
 const solver_1 = require("../solver");
 const util_1 = require("../util");
-exports.CellState = util_1.Enum("X", "O");
+exports.CellState = (0, util_1.Enum)("X", "O");
 function cloneState(state) {
-    const ret = util_1.Array2D(state.length, state.length);
+    const ret = (0, util_1.Array2D)(state.length, state.length);
     for (let row = 0; row < state.length; row++) {
         for (let column = 0; column < state[row].length; column++) {
             ret[row][column] = state[row][column];
@@ -116,7 +117,8 @@ var Strategies;
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     function register(strat) {
-        _all.push({ strategy: solver_1.strategy(strat), name: strat.name });
+        // @ts-ignore FIXME
+        _all.push({ strategy: (0, solver_1.strategy)(strat), name: strat.name });
         return strat;
     }
     Strategies.register = register;
@@ -137,5 +139,5 @@ var Strategies;
             }
         }
     });
-})(Strategies = exports.Strategies || (exports.Strategies = {}));
+})(Strategies || (exports.Strategies = Strategies = {}));
 //# sourceMappingURL=xsnos.js.map

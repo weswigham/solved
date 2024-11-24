@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Strategies = exports.Solver = exports.RowColumn = exports.EdgeState = void 0;
+exports.newState = newState;
 const solver_1 = require("../solver");
 const util_1 = require("../util");
-exports.EdgeState = util_1.Enum("wall", "notwall");
-exports.RowColumn = util_1.Enum("row", "column");
+exports.EdgeState = (0, util_1.Enum)("wall", "notwall");
+exports.RowColumn = (0, util_1.Enum)("row", "column");
 const directions = Object.keys(util_1.Cardinal);
 function* affectingGridSquares(state, which, x, y) {
     switch (which) {
@@ -107,7 +109,7 @@ function traceLoop(state, startingEdge, totalEdges, onEdge, log) {
             }
         }
         followed++;
-        if ((followed - 1) > totalEdges) {
+        if ((followed - 1) > totalEdges) { // -1 since we hit the start twice
             throw new Error("Somehow traversed more edges than exist in the graph"); // This should be impossible. Please send help.
         }
         const setOne = [...connectingEdges(state, to[0], to[1], to[2], to[0] === "row" ? util_1.Cardinal.west : util_1.Cardinal.north)];
@@ -183,8 +185,8 @@ function isInvalid(state, startingEdge = undefined, log = false) {
         return false;
     }
     let paintedEdges = {
-        row: util_1.Array2D(state.edges.row.length, state.edges.row[0].length),
-        column: util_1.Array2D(state.edges.column.length, state.edges.column[0].length)
+        row: (0, util_1.Array2D)(state.edges.row.length, state.edges.row[0].length),
+        column: (0, util_1.Array2D)(state.edges.column.length, state.edges.column[0].length)
     };
     let paintCount = 0;
     do {
@@ -307,7 +309,7 @@ function cloneState(state) {
     // WARING: Don't use `map` as it doesn't map holes in arrays
     const width = state.grid.length;
     const height = state.grid[0].length;
-    const newState = { grid: util_1.Array2D(width, height), edges: { row: util_1.Array2D(width, height + 1), column: util_1.Array2D(width + 1, height) } };
+    const newState = { grid: (0, util_1.Array2D)(width, height), edges: { row: (0, util_1.Array2D)(width, height + 1), column: (0, util_1.Array2D)(width + 1, height) } };
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             newState.grid[x][y] = state.grid[x][y];
@@ -336,7 +338,7 @@ var Strategies;
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     function register(strat) {
-        _all.push({ strategy: solver_1.strategy(strat), name: strat.name });
+        _all.push({ strategy: (0, solver_1.strategy)(strat), name: strat.name });
         return strat;
     }
     Strategies.register = register;
@@ -972,7 +974,7 @@ var Strategies;
             }
         }
     });
-})(Strategies = exports.Strategies || (exports.Strategies = {}));
+})(Strategies || (exports.Strategies = Strategies = {}));
 /**
  * Call like so:
  * (sample problem 1 from http://www.nikoli.com/en/puzzles/slitherlink/)
@@ -992,7 +994,7 @@ var Strategies;
 function newState(input) {
     const width = input[0].length;
     const height = input.length;
-    const state = { grid: util_1.Array2D(width, height), edges: { row: util_1.Array2D(width, height + 1), column: util_1.Array2D(width + 1, height) } };
+    const state = { grid: (0, util_1.Array2D)(width, height), edges: { row: (0, util_1.Array2D)(width, height + 1), column: (0, util_1.Array2D)(width + 1, height) } };
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             state.grid[x][y] = input[y][x];
@@ -1000,5 +1002,4 @@ function newState(input) {
     }
     return state;
 }
-exports.newState = newState;
 //# sourceMappingURL=slitherlink.js.map

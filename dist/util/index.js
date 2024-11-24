@@ -1,5 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Cardinal = void 0;
+exports.Enum = Enum;
+exports.shuffle = shuffle;
+exports.Array2D = Array2D;
 function Enum(...x) {
     const o = {};
     for (const k in x) {
@@ -7,7 +11,6 @@ function Enum(...x) {
     }
     return o;
 }
-exports.Enum = Enum;
 exports.Cardinal = Enum("north", "east", "south", "west");
 function shuffle(a) {
     for (let i = a.length; i; i--) {
@@ -15,7 +18,6 @@ function shuffle(a) {
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
 }
-exports.shuffle = shuffle;
 function Array2D(width, height) {
     const a = new Array(width);
     for (let i = 0; i < width; i++) {
@@ -23,5 +25,4 @@ function Array2D(width, height) {
     }
     return a;
 }
-exports.Array2D = Array2D;
 //# sourceMappingURL=index.js.map

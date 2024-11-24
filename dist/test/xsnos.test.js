@@ -13,7 +13,7 @@ describe("The Xs and Os solver", () => {
             [, , , ,]
         ]);
         const value = solutions.next().value;
-        chai_1.expect(value).to.not.be.undefined;
+        (0, chai_1.expect)(value).to.not.be.undefined;
         solver.display(value);
     });
 });

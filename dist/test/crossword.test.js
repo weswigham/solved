@@ -8,9 +8,9 @@ describe("the crossword solver", () => {
         const solver = new puzzles_1.Crossword.Solver(new puzzles_1.Crossword.BasicDictionary("ace\ntea\ntot\natt\nceo\neat"));
         const solutions = solver.solutions({ values: [["?", "?", "?"], ["?", "?", "?"], ["?", "?", "?"]] });
         const first = solutions.next();
-        chai_1.expect(first).to.exist;
-        chai_1.expect(first.value).to.exist;
-        chai_1.expect(first.value).to.deep.equal({ values: [["A", "C", "E"], ["T", "E", "A"], ["T", "O", "T"]] });
+        (0, chai_1.expect)(first).to.exist;
+        (0, chai_1.expect)(first.value).to.exist;
+        (0, chai_1.expect)(first.value).to.deep.equal({ values: [["A", "C", "E"], ["T", "E", "A"], ["T", "O", "T"]] });
     });
 });
 //# sourceMappingURL=crossword.test.js.map
