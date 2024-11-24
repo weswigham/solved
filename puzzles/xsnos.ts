@@ -120,6 +120,7 @@ export namespace Strategies {
      * Add a strategy to the list of all strategies which are automatically used and attach the function's name as the strategy name
      */
     export function register(strat: Strategy<State>): Strategy<State> {
+        // @ts-ignore FIXME
         _all.push({strategy: strategy(strat), name: strat.name});
         return strat;
     }

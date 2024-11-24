@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999",
-    "debug": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --timeout=999999 --debug",
+    "test": "mocha --require ts-node/register --loader=ts-node/esm --timeout=999999 --extension=ts --experimental-require-module test/**/*.test.ts",
+    "debug": "mocha --require ts-node/register --timeout=999999 --extension=ts --experimental-require-module --debug test/**/*.test.ts",
     "precommit": "tsc && git add ./dist -f"
   },
   "repository": {
@@ -25,13 +25,12 @@
   },
   "homepage": "https://github.com/weswigham/solved#readme",
   "devDependencies": {
-    "@types/chai": "^3.4.34",
-    "@types/mocha": "^2.2.38",
-    "@types/node": "^7.0.4",
-    "chai": "^3.5.0",
-    "git-pre-commit": "^2.1.3",
-    "mocha": "^3.2.0",
-    "ts-node": "^2.0.0",
-    "typescript": "^2.2.1"
+    "@types/chai": "latest",
+    "@types/mocha": "latest",
+    "@types/node": "latest",
+    "chai": "latest",
+    "mocha": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
   }
 }

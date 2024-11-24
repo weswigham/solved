@@ -1,5 +1,6 @@
 export abstract class AbstractSolver<TState> {
     private statesExplored = 0;
+    protected bfs = false;
     constructor(protected printStates: boolean = false) {}
     *solutions(initial: TState): IterableIterator<TState> {
         this.statesExplored++;
@@ -14,8 +15,25 @@ export abstract class AbstractSolver<TState> {
             if (this.printStates) console.log(`State number ${this.statesExplored} is a solution.`);
             return yield initial;
         }
-        for (const next of this.enumerateNext(initial)) {
-            yield* this.solutions(next);
+        if (this.bfs) {
+            const work = [this.enumerateNext(initial)];
+            while (work.length) {
+                const item = work.pop();
+                for (const next of item) {
+                    if (this.isSolution(next)) {
+                        yield next
+                    }
+                    else {
+                        work.unshift(this.enumerateNext(next));
+                    }
+                }
+            }
+
+        }
+        else {
+            for (const next of this.enumerateNext(initial)) {
+                yield* this.solutions(next);
+            }
         }
     }
     abstract enumerateNext(state: TState): IterableIterator<TState>;
