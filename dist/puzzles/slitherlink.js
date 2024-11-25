@@ -75,6 +75,7 @@ function* connectingEdges(state, type, x, y, side) {
 function getEdge(state, kind, x, y) {
     if (x < 0 || y < 0 || x >= state.edges[kind].length || y >= state.edges[kind][x].length)
         return "notwall";
+    // @ts-ignore
     return state.edges[kind][x][y];
 }
 function setEdge(es, state, kind, x, y) {
@@ -123,11 +124,13 @@ function traceLoop(state, startingEdge, totalEdges, onEdge, log) {
         }
         return follow(walls[0], to);
     };
+    // @ts-ignore
     if (follow(startingEdge, undefined)) {
         return followed;
     }
     return false;
 }
+// @ts-ignore
 function isInvalid(state, startingEdge = undefined, log = false) {
     // All number constraints must not be exceeded
     for (let x = 0; x < state.grid.length; x++) {
@@ -206,6 +209,7 @@ function isInvalid(state, startingEdge = undefined, log = false) {
         if (!startingEdge) {
             return false;
         }
+        // @ts-ignore
         const looped = traceLoop(state, startingEdge, totalEdges, edge => {
             if (paintedEdges[edge[0]][edge[1]][edge[2]])
                 return false;
@@ -251,6 +255,7 @@ class Solver extends solver_1.StrategicAbstractSolver {
         // Count edges before we walk a loop - if the loop we walk has fewwer edges than this, then
         // there must be multiple loops or edge chains.
         let totalEdges = 0;
+        // @ts-ignore
         let startingEdge = undefined;
         for (const type of ["row", "column"]) {
             for (let x = 0; x < state.edges[type].length; x++) {
@@ -347,6 +352,7 @@ var Strategies;
         let violation = false;
         for (let x = 0; x < state.grid.length; x++) {
             for (let y = 0; y < state.grid[x].length; y++) {
+                // @ts-ignore
                 action(x, y, getGridElement, lookupEdgeInternal, getEdgeInternal, setEdgeInternal);
                 if (violation)
                     return undefined; // If the set edge function marks a constraint violation, return no new state
@@ -372,6 +378,7 @@ var Strategies;
                 return es;
             if (cur !== undefined && cur !== es) {
                 violation = true;
+                // @ts-ignore
                 return;
             }
             const val = setEdge(es, changed || state, kind, x, y);

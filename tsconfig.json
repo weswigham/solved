@@ -5,7 +5,8 @@
         "noImplicitAny": true,
         "sourceMap": true,
         "declaration": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "strict": true
     },
     "exclude": [
         "dist", "node_modules"

@@ -25,7 +25,7 @@ class Solver extends solver_1.AbstractSolver {
     *enumerateNext(state) {
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
-                if (state.board[i][j]) {
+                if (state.board[i][j] && state.rules[i][j]) {
                     const nextState = this.applyRule(state.rules[i][j], state, i, j);
                     const nextStateHash = this.stringify(nextState);
                     if (!this.visited.has(nextStateHash)) {
@@ -46,6 +46,9 @@ class Solver extends solver_1.AbstractSolver {
         return true;
     }
     applyRule(rule, state, iRule, jRule) {
+        if (!rule) {
+            return state; // undefined rule
+        }
         const output = [[false, false, false, false, false], [false, false, false, false, false], [false, false, false, false, false], [false, false, false, false, false], [false, false, false, false, false]];
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {

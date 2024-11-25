@@ -17,6 +17,7 @@ console.log("Initial puzzle:");
 solver.display(state);
 const newState = deleteConstraints(state);
 console.log("Minimally constrained puzzle:");
+// @ts-ignore
 solver.display(newState);
 
 function countConstraints(state: solved.RainRadar.State): number {
@@ -43,8 +44,10 @@ function deleteConstraints(state: solved.RainRadar.State): solved.RainRadar.Stat
             console.log("Candidate puzzle:");
             solver.display(newPuzzle);
             const lesser = deleteConstraints(newPuzzle);
+            // @ts-ignore
             const lesserSize = countConstraints(lesser);
             if (lesser !== newMinimumPuzzle && lesserSize < minimumCount) {
+                // @ts-ignore
                 newMinimumPuzzle = lesser;
                 minimumCount = lesserSize;
             }
@@ -61,8 +64,10 @@ function deleteConstraints(state: solved.RainRadar.State): solved.RainRadar.Stat
             console.log("Candidate puzzle:");
             solver.display(newPuzzle);
             const lesser = deleteConstraints(newPuzzle);
+            // @ts-ignore
             const lesserSize = countConstraints(lesser);
             if (lesser !== newMinimumPuzzle && lesserSize < minimumCount) {
+                // @ts-ignore
                 newMinimumPuzzle = lesser;
                 minimumCount = lesserSize;
             }

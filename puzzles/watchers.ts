@@ -7,7 +7,7 @@ export type RowState<T> = [T, T, T, T, T];
 
 export type RowColumnState<T> = [RowState<T>, RowState<T>, RowState<T>, RowState<T>, RowState<T>];
 
-export type RuleDescription = RowColumnState<CellState>;
+export type RuleDescription = RowColumnState<CellState> | undefined;
 
 export interface State {
     rules: RowColumnState<RuleDescription>;
@@ -35,7 +35,7 @@ export class Solver extends AbstractSolver<State> {
     *enumerateNext(state: State) {
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
-                if (state.board[i][j]) {
+                if (state.board[i][j] && state.rules[i][j]) {
                     const nextState = this.applyRule(state.rules[i][j], state, i, j);
                     const nextStateHash = this.stringify(nextState);
                     if (!this.visited.has(nextStateHash)) {
@@ -56,6 +56,9 @@ export class Solver extends AbstractSolver<State> {
     }
 
     applyRule(rule: RuleDescription, state: State, iRule: number, jRule: number): State {
+        if (!rule) {
+            return state; // undefined rule
+        }
         const output: RowColumnState<CellState> = [[false,false,false,false,false],[false,false,false,false,false],[false,false,false,false,false],[false,false,false,false,false],[false,false,false,false,false]];
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {

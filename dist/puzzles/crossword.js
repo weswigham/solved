@@ -21,6 +21,7 @@ class BasicDictionary {
         this.cachedKeys.push(pattern);
         this.storedResults[pattern] = this.dict.match(this.get(pattern)) || [];
         if (this.cachedKeys.length > this.cacheSize) {
+            // @ts-ignore
             this.storedResults[this.cachedKeys.shift()] = undefined;
         }
         return this.storedResults[pattern];

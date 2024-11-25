@@ -23,6 +23,7 @@ As far as edges are concerned, array lengths should be based on grid lengths:
 
 */
 function affectingGridSquares(state: State, which: RowColumn, x: number, y: number): IterableIterator<[number, number]>;
+// @ts-ignore
 function affectingGridSquares(state: State, ...tuple: (RowColumn | number)[]): IterableIterator<[number, number]>;
 function* affectingGridSquares(state: State, which: RowColumn, x: number, y: number): IterableIterator<[number, number]> {
     switch (which) {
@@ -92,13 +93,16 @@ function* connectingEdges(state: State, type: RowColumn, x: number, y: number, s
 
 
 function getEdge(state: State, kind: RowColumn, x: number, y: number): EdgeState;
+// @ts-ignore
 function getEdge(state: State, ...tuple: (RowColumn | number)[]): EdgeState;
 function getEdge(state: State, kind: RowColumn, x: number, y: number): EdgeState {
     if (x < 0 || y < 0 || x >= state.edges[kind].length || y >= state.edges[kind][x].length) return "notwall";
+    // @ts-ignore
     return state.edges[kind][x][y];
 }
 
 function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: number): EdgeState;
+// @ts-ignore
 function setEdge(es: EdgeState, state: State, ...tuple: (RowColumn | number)[]): EdgeState;
 function setEdge(es: EdgeState, state: State, kind: RowColumn, x: number, y: number): EdgeState {
     if (x < 0 || y < 0 || x >= state.edges[kind].length || y >= state.edges[kind][x].length) {
@@ -146,12 +150,13 @@ function traceLoop(state: State, startingEdge: [RowColumn, number, number], tota
         }
         return follow(walls[0], to);
     };
+    // @ts-ignore
     if (follow(startingEdge, undefined)) {
         return followed;
     }
     return false;
 }
-
+// @ts-ignore
 function isInvalid(state: State, startingEdge: [RowColumn, number, number] = undefined, log = false) {
     // All number constraints must not be exceeded
     for (let x = 0; x < state.grid.length; x++) {
@@ -237,6 +242,7 @@ function isInvalid(state: State, startingEdge: [RowColumn, number, number] = und
             return false;
         }
 
+        // @ts-ignore
         const looped = traceLoop(state, startingEdge, totalEdges, edge => {
             if (paintedEdges[edge[0]][edge[1]][edge[2]]) return false;
             paintedEdges[edge[0]][edge[1]][edge[2]] = true;
@@ -284,6 +290,7 @@ export class Solver extends StrategicAbstractSolver<State> {
         // Count edges before we walk a loop - if the loop we walk has fewwer edges than this, then
         // there must be multiple loops or edge chains.
         let totalEdges = 0;
+        // @ts-ignore
         let startingEdge: [RowColumn, number, number] = undefined;
         for (const type of (["row", "column"] as RowColumn[])) {
             for (let x = 0; x < state.edges[type].length; x++) {
@@ -396,6 +403,7 @@ export namespace Strategies {
         let violation = false;
         for (let x = 0; x < state.grid.length; x++) {
             for (let y = 0; y< state.grid[x].length; y++) {
+                // @ts-ignore
                 action(x, y, getGridElement, lookupEdgeInternal, getEdgeInternal, setEdgeInternal);
                 if (violation) return undefined; // If the set edge function marks a constraint violation, return no new state
             }
@@ -412,6 +420,7 @@ export namespace Strategies {
         }
 
         function getEdgeInternal(kind: RowColumn, x: number, y: number): EdgeState;
+        // @ts-ignore
         function getEdgeInternal(...tuple: (RowColumn | number)[]): EdgeState;
         function getEdgeInternal(kind: RowColumn, x: number, y: number): EdgeState {
             return getEdge(changed || state, kind, x, y);
@@ -423,6 +432,7 @@ export namespace Strategies {
             if (cur === es) return es;
             if (cur !== undefined && cur !== es) {
                 violation = true;
+                // @ts-ignore
                 return;
             }
             const val = setEdge(es, changed || state, kind, x, y);

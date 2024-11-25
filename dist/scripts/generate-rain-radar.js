@@ -16,6 +16,7 @@ console.log("Initial puzzle:");
 solver.display(state);
 const newState = deleteConstraints(state);
 console.log("Minimally constrained puzzle:");
+// @ts-ignore
 solver.display(newState);
 function countConstraints(state) {
     return state.rows.reduce((prev, current) => current !== -1 ? prev + 1 : prev, 0) +
@@ -40,8 +41,10 @@ function deleteConstraints(state) {
             console.log("Candidate puzzle:");
             solver.display(newPuzzle);
             const lesser = deleteConstraints(newPuzzle);
+            // @ts-ignore
             const lesserSize = countConstraints(lesser);
             if (lesser !== newMinimumPuzzle && lesserSize < minimumCount) {
+                // @ts-ignore
                 newMinimumPuzzle = lesser;
                 minimumCount = lesserSize;
             }
@@ -59,8 +62,10 @@ function deleteConstraints(state) {
             console.log("Candidate puzzle:");
             solver.display(newPuzzle);
             const lesser = deleteConstraints(newPuzzle);
+            // @ts-ignore
             const lesserSize = countConstraints(lesser);
             if (lesser !== newMinimumPuzzle && lesserSize < minimumCount) {
+                // @ts-ignore
                 newMinimumPuzzle = lesser;
                 minimumCount = lesserSize;
             }

@@ -19,7 +19,7 @@ export abstract class AbstractSolver<TState> {
             const work = [this.enumerateNext(initial)];
             while (work.length) {
                 const item = work.pop();
-                for (const next of item) {
+                for (const next of item!) {
                     if (this.isSolution(next)) {
                         yield next
                     }
@@ -75,7 +75,7 @@ export abstract class StrategicAbstractSolver<TState> extends AbstractSolver<TSt
             const result = gen.next();
             if (result && result.value) {
                 yield result.value;
-                yield* gen;
+                yield* gen as IterableIterator<TState>;
                 break;
             }
         }

@@ -2,7 +2,7 @@ import { AbstractSolver } from "../solver";
 export type CellState = boolean;
 export type RowState<T> = [T, T, T, T, T];
 export type RowColumnState<T> = [RowState<T>, RowState<T>, RowState<T>, RowState<T>, RowState<T>];
-export type RuleDescription = RowColumnState<CellState>;
+export type RuleDescription = RowColumnState<CellState> | undefined;
 export interface State {
     rules: RowColumnState<RuleDescription>;
     board: RowColumnState<CellState>;
